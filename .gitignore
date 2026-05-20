@@ -1,0 +1,15 @@
+# Exclude everything by default
+*
+!.gitignore
+
+# Include HTML files
+!*.html
+
+# Include documentation
+!CLAUDE.md
+
+# Include serverless function and UI assets
+!functions/
+!functions/api/
+!functions/api/nfts.js
+!a-logo.png
