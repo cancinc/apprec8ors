@@ -491,9 +491,6 @@
     </svg>
     <h2>NFT Explorer</h2>
     <p>Enter a wallet address, then add one or more OpenSea collection slugs.</p>
-    <p style="margin-top:10px">The slug is the last part of an OpenSea URL:<br>
-      <code>opensea.io/collection/<strong>cryptopunks</strong></code>
-    </p>
   </div>
   <div id="empty-state" class="empty" style="display:none">
     <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -555,6 +552,7 @@ let collections     = {};  // slug → CollState
 let collectionOrder = [];  // insertion order
 let view            = [];  // current sorted array for grid + lightbox index
 let currentLbNft    = null;
+let rebuildTimer    = null;
 
 // Browse wallet state
 const browse = {
@@ -760,17 +758,18 @@ function renderBrowseList() {
     list.innerHTML = '<div class="browse-empty">No NFTs found on Ethereum, ApeChain, or Base.</div>';
     return;
   }
-  list.innerHTML = browse.results.map(({ slug, chain }) => {
-    const isAdded = !!collections[slug];
-    const checked = browse.selected.has(slug);
-    const badge   = CHAIN_SHORT[chain] || chain;
+  list.innerHTML = browse.results.map(({ slug, chain, name }) => {
+    const isAdded    = !!collections[slug];
+    const checked    = browse.selected.has(slug);
+    const badge      = CHAIN_SHORT[chain] || chain;
+    const displayName = name || slugToLabel(slug);
     return '<label class="browse-item' + (isAdded ? ' already-added' : '') + '" title="' + esc(slug) + '">' +
       '<input type="checkbox" value="' + esc(slug) + '"' +
         (checked || isAdded ? ' checked' : '') +
         (isAdded ? ' disabled' : '') +
         ' onchange="onBrowseCheck(this)">' +
       '<div class="browse-item-info">' +
-        '<div class="browse-item-name">' + esc(slugToLabel(slug)) + '</div>' +
+        '<div class="browse-item-name">' + esc(displayName) + '</div>' +
         '<div class="browse-item-slug">' + esc(slug) + '</div>' +
       '</div>' +
       '<span class="browse-chain-badge">' + esc(badge) + '</span>' +
@@ -864,10 +863,8 @@ async function fetchCollection(slug) {
       if (collections[slug]?.fetchSeq === mySeq) {
         c.nfts = [...nfts];
         renderTags();
-        rebuildAndSort();
+        rebuildAndSortDebounced();
       }
-
-      if (cursor) await sleep(100);
     } while (cursor);
 
     if (collections[slug]?.fetchSeq !== mySeq) return;
@@ -899,8 +896,15 @@ function rebuildAndSort() {
       all.push(...c.nfts);
     }
   }
-  updateTraitSortOptions();
+  if (!collectionOrder.some(s => collections[s]?.status === 'loading')) {
+    updateTraitSortOptions();
+  }
   applySort(all);
+}
+
+function rebuildAndSortDebounced() {
+  clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(rebuildAndSort, 200);
 }
 
 function updateTraitSortOptions() {

@@ -32,8 +32,16 @@ function isRateLimited(ip) {
   return false;
 }
 
-async function resolveCollection(slug, apiKey) {
+async function resolveCollection(slug, apiKey, ctx) {
   if (collectionCache.has(slug)) return collectionCache.get(slug);
+
+  const cacheKey = new Request(`https://explorer.cache/collections/${encodeURIComponent(slug)}`);
+  const cached = await caches.default.match(cacheKey);
+  if (cached) {
+    const meta = await cached.json();
+    collectionCache.set(slug, meta);
+    return meta;
+  }
 
   const resp = await fetch(
     `https://api.opensea.io/api/v2/collections/${encodeURIComponent(slug)}`,
@@ -55,6 +63,9 @@ async function resolveCollection(slug, apiKey) {
     name:    data.name || slug,
   };
   collectionCache.set(slug, meta);
+  ctx.waitUntil(caches.default.put(cacheKey, new Response(JSON.stringify(meta), {
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
+  })));
   return meta;
 }
 
@@ -89,7 +100,7 @@ export async function onRequestGet(context) {
   // Resolve chain + contract address for this collection
   let meta;
   try {
-    meta = await resolveCollection(rawSlug, apiKey);
+    meta = await resolveCollection(rawSlug, apiKey, context);
   } catch (err) {
     const timedOut = err.name === 'TimeoutError' || err.name === 'AbortError';
     return json({ error: timedOut ? 'Collection lookup timed out.' : 'Failed to look up collection.' }, 502);

@@ -73,10 +73,11 @@ Navy/yellow brand design (separate from the dark gallery theme). Sections:
 - Returns `{ collections: [{ slug, chain }] }` sorted alphabetically
 - Individual chain failures are silently tolerated (partial results still returned)
 - Cached for 2 minutes at the CDN level
+- Optimization available: `POST /api/v2/collections/batch` (array of slugs) can resolve display names for multiple collections in one call instead of individual lookups
 
 ### Planned next: collection name search
 - Add typeahead on the slug input calling a `/api/search-collections` endpoint
-- That endpoint calls `GET /api/v2/collections?collection_type=non-fungible&name=<query>`
+- That endpoint calls `GET /api/v2/search?query=<query>&asset_types=collection&limit=50` — **not** `GET /api/v2/collections?name=<query>`; `name` is not a valid param on the collections list endpoint
 - Dropdown shows matching names; selecting fills the slug field
 - Browse wallet covers the primary discovery use case; name search handles "I know the collection but not the slug"
 
@@ -132,8 +133,8 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 - Video from `raw2.seadn.io` may not have permissive CORS — canvas cells may render as dark placeholders
 
 ## Ideas on deck
-- **Filter by traits** — dropdown or pill filters built from trait types/values in loaded NFTs; filter state applied on top of sort before `renderGrid()`; trait options derived dynamically so it works across all collections (gallery.html doesn't have this yet; explorer.html has trait *sort* but not *filter*)
-- **Collection name typeahead** — search by name instead of slug in explorer.html; calls `GET /api/v2/collections?name=<query>`; see Explorer section above
+- **Filter by traits** — dropdown or pill filters built from trait types/values in loaded NFTs; filter state applied on top of sort before `renderGrid()`; trait options derived dynamically so it works across all collections (gallery.html doesn't have this yet; explorer.html has trait *sort* but not *filter*); can use `GET /api/v2/traits/{slug}` to get all trait categories + value counts without paging through all NFTs
+- **Collection name typeahead** — search by name instead of slug in explorer.html; calls `GET /api/v2/search?query=<query>&asset_types=collection&limit=50`; see Explorer section above
 - **ZIP download** — JSZip (cdnjs) to batch-download all wallet images as a single `.zip`; fetch each as blob via `blobToPng()`, name as `{collection}_{id}.png`; warn if >100 items
 - **Rarity sort** — needs OpenRarity integration or pre-computed trait rarity lookup via `/api/traits` endpoint
 - **Analytics** — Cloudflare Pages Analytics or a lightweight pixel

@@ -26,27 +26,57 @@ function isRateLimited(ip) {
 }
 
 async function fetchChainCollections(chain, wallet, apiKey) {
-  try {
-    const resp = await fetch(
-      `https://api.opensea.io/api/v2/chain/${chain}/account/${wallet}/nfts?limit=200`,
-      {
+  const seen    = new Set();
+  const results = [];
+  let cursor    = null;
+
+  for (let page = 0; page < 2; page++) {
+    try {
+      let url = `https://api.opensea.io/api/v2/chain/${chain}/account/${wallet}/nfts?limit=200`;
+      if (cursor) url += `&next=${encodeURIComponent(cursor)}`;
+      const resp = await fetch(url, {
         headers: { 'x-api-key': apiKey, 'accept': 'application/json' },
         signal: AbortSignal.timeout(10_000),
+      });
+      if (!resp.ok) break;
+      const data = await resp.json();
+      for (const nft of (data.nfts || [])) {
+        if (nft.collection && !seen.has(nft.collection)) {
+          seen.add(nft.collection);
+          results.push({ slug: nft.collection, chain });
+        }
       }
-    );
-    if (!resp.ok) return [];
-    const data = await resp.json();
-    const seen    = new Set();
-    const results = [];
-    for (const nft of (data.nfts || [])) {
-      if (nft.collection && !seen.has(nft.collection)) {
-        seen.add(nft.collection);
-        results.push({ slug: nft.collection, chain });
-      }
+      cursor = data.next || null;
+      if (!cursor) break;
+    } catch {
+      break;
     }
-    return results;
+  }
+  return results;
+}
+
+async function resolveCollectionNames(slugs, apiKey) {
+  if (slugs.length === 0) return {};
+  try {
+    const resp = await fetch('https://api.opensea.io/api/v2/collections/batch', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'content-type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: JSON.stringify({ collection_slugs: slugs }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!resp.ok) return {};
+    const data = await resp.json();
+    const names = {};
+    for (const coll of (data.collections || [])) {
+      if (coll.collection && coll.name) names[coll.collection] = coll.name;
+    }
+    return names;
   } catch {
-    return [];
+    return {};
   }
 }
 
@@ -84,7 +114,11 @@ export async function onRequestGet(context) {
   }
   collections.sort((a, b) => a.slug.localeCompare(b.slug));
 
-  return json({ collections });
+  // Resolve real collection names in one batch call; fall back to slug if it fails
+  const names = await resolveCollectionNames(collections.map(c => c.slug), apiKey);
+  const withNames = collections.map(c => ({ ...c, name: names[c.slug] || null }));
+
+  return json({ collections: withNames });
 }
 
 function json(body, status = 200) {
