@@ -1257,15 +1257,16 @@ async function downloadLightboxImage() {
 
     const blob = await resp.blob();
     const ct   = (resp.headers.get('Content-Type') || '').toLowerCase();
-    const ext  = ct.includes('avif') ? 'avif'
-               : ct.includes('webp') ? 'webp'
-               : ct.includes('gif')  ? 'gif'
-               : ct.includes('svg')  ? 'svg'
-               : ct.includes('mp4')  ? 'mp4'
-               : 'png';
+
+    let saveBlob = blob;
+    let ext = ct.includes('gif') ? 'gif' : ct.includes('mp4') ? 'mp4' : ct.includes('svg') ? 'svg' : null;
+    if (!ext) {
+      saveBlob = await blobToPng(blob);
+      ext = 'png';
+    }
 
     const filename = 'explorer_' + prefix + '_' + n.identifier + '.' + ext;
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(saveBlob);
     const a = Object.assign(document.createElement('a'), { href: url, download: filename });
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
@@ -1335,6 +1336,7 @@ async function downloadGrid() {
   }
 }
 
+function blobToPng(blob){return new Promise((resolve,reject)=>{const img=new Image();const u=URL.createObjectURL(blob);img.onload=()=>{URL.revokeObjectURL(u);const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);c.toBlob(resolve,'image/png');};img.onerror=()=>{URL.revokeObjectURL(u);reject(new Error('decode failed'));};img.src=u;});}
 function loadImg(src) {
   return new Promise(r => {
     const i = new Image(); i.crossOrigin = 'anonymous';

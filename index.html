@@ -1019,18 +1019,19 @@ async function downloadLightboxImage() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
 
     const blob = await resp.blob();
-
-    // Detect true format from Content-Type so the saved file opens correctly
     const ct = (resp.headers.get('Content-Type') || '').toLowerCase();
-    const ext = ct.includes('avif') ? 'avif'
-              : ct.includes('webp') ? 'webp'
-              : ct.includes('gif')  ? 'gif'
-              : ct.includes('svg')  ? 'svg'
-              : ct.includes('mp4')  ? 'mp4'
-              : 'png';
+
+    // GIF and MP4 are intentional formats — save natively
+    let saveBlob = blob;
+    let ext = ct.includes('gif') ? 'gif' : ct.includes('mp4') ? 'mp4' : ct.includes('svg') ? 'svg' : null;
+    if (!ext) {
+      // Convert everything else (avif, webp, png, unknown) to PNG via canvas
+      saveBlob = await blobToPng(blob);
+      ext = 'png';
+    }
 
     const filename = 'apprec8ors_' + prefix + '_' + n.identifier + '.' + ext;
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(saveBlob);
     const a = Object.assign(document.createElement('a'), { href: url, download: filename });
     document.body.appendChild(a);
     a.click();
@@ -1088,6 +1089,8 @@ async function downloadGrid() {
     },'image/png');
   } catch(e){status('Export failed: '+e.message,'error');resetDlBtn();}
 }
+// Converts any image blob to PNG via canvas (avoids AVIF/webp compatibility issues on save)
+function blobToPng(blob){return new Promise((resolve,reject)=>{const img=new Image();const u=URL.createObjectURL(blob);img.onload=()=>{URL.revokeObjectURL(u);const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);c.toBlob(resolve,'image/png');};img.onerror=()=>{URL.revokeObjectURL(u);reject(new Error('decode failed'));};img.src=u;});}
 // No CORS fallback — loading without crossOrigin taints the canvas and corrupts the export
 function loadImg(src){return new Promise(r=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});}
 function loadVideoFrame(src){return new Promise(r=>{const v=document.createElement('video');v.crossOrigin='anonymous';v.muted=true;v.src=src;v.onloadeddata=()=>{v.currentTime=0.001;v.onseeked=()=>r(v);};v.onerror=()=>r(null);v.load();setTimeout(()=>r(null),8000);});}
