@@ -17,6 +17,7 @@
 !functions/api/
 !functions/api/nfts.js
 !functions/api/explore.js
+!functions/api/wallet-collections.js
 !a-logo.png
 
 # Include deploy/ — production folder

@@ -300,6 +300,65 @@
     }
     .coll-tag-remove:hover { color: var(--red); background: rgba(255,92,92,0.1); }
 
+    /* ── Browse wallet dropdown ── */
+    .browse-wrap { position: relative; display: inline-block; }
+    .browse-panel {
+      position: absolute; top: calc(100% + 6px); left: 0;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; min-width: 290px; max-width: 380px;
+      max-height: 340px; display: flex; flex-direction: column;
+      z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    .browse-panel-header {
+      padding: 10px 14px 8px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .browse-panel-header-label { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .browse-panel-actions { display: flex; gap: 10px; }
+    .browse-text-btn {
+      background: none; border: none; color: var(--text-dim);
+      font-size: 0.72rem; cursor: pointer; padding: 0;
+      text-decoration: underline; text-underline-offset: 2px; font-family: inherit;
+    }
+    .browse-text-btn:hover { color: var(--gold); }
+    .browse-list { overflow-y: auto; flex: 1; padding: 4px 0; }
+    .browse-loading, .browse-empty {
+      padding: 28px 14px; text-align: center;
+      font-size: 0.82rem; color: var(--text-muted);
+    }
+    .browse-loading { color: var(--gold); animation: tagpulse 1.4s ease-in-out infinite; }
+    .browse-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 14px; cursor: pointer;
+      transition: background 0.1s; user-select: none;
+    }
+    .browse-item:hover { background: var(--surface); }
+    .browse-item.already-added { opacity: 0.4; pointer-events: none; }
+    .browse-item input[type="checkbox"] {
+      accent-color: var(--gold); width: 14px; height: 14px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .browse-item-info { flex: 1; min-width: 0; }
+    .browse-item-name {
+      font-size: 0.82rem; color: var(--text); font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .browse-item-slug {
+      font-size: 0.68rem; color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .browse-chain-badge {
+      font-size: 0.65rem; color: var(--text-muted); background: var(--surface);
+      border: 1px solid var(--border); padding: 1px 6px; border-radius: 3px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .browse-panel-footer {
+      padding: 10px 14px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .browse-sel-count { font-size: 0.75rem; color: var(--text-dim); }
+
     #export-canvas { display: none; position: absolute; pointer-events: none; }
 
     @media (max-width: 640px) {
@@ -347,6 +406,25 @@
       oninput="onSlugInput()" onkeydown="if(event.key==='Enter')addCollection()">
   </div>
   <button class="btn btn-ghost" id="add-btn" onclick="addCollection()">+ Add</button>
+  <div class="browse-wrap">
+    <button class="btn btn-ghost" id="browse-btn" onclick="toggleBrowse()" disabled>Browse wallet ▾</button>
+    <div class="browse-panel" id="browse-panel" style="display:none">
+      <div class="browse-panel-header">
+        <span class="browse-panel-header-label">Collections in wallet</span>
+        <div class="browse-panel-actions">
+          <button class="browse-text-btn" onclick="selectAllBrowse()">All</button>
+          <button class="browse-text-btn" onclick="clearBrowseSel()">None</button>
+        </div>
+      </div>
+      <div class="browse-list" id="browse-list">
+        <div class="browse-loading">Scanning Ethereum, ApeChain, Base…</div>
+      </div>
+      <div class="browse-panel-footer">
+        <span class="browse-sel-count" id="browse-sel-count">0 selected</span>
+        <button class="btn btn-gold" id="browse-add-btn" onclick="addBrowseSelected()" disabled style="padding:6px 14px;font-size:0.8rem">Add selected</button>
+      </div>
+    </div>
+  </div>
   <div class="coll-tags" id="coll-tags"></div>
 </div>
 
@@ -478,6 +556,14 @@ let collectionOrder = [];  // insertion order
 let view            = [];  // current sorted array for grid + lightbox index
 let currentLbNft    = null;
 
+// Browse wallet state
+const browse = {
+  loaded:   false,   // whether we've fetched for current wallet
+  loading:  false,
+  results:  [],      // [{ slug, chain }]
+  selected: new Set(),
+};
+
 function makeCollState(slug) {
   return {
     slug,
@@ -512,12 +598,13 @@ function searchWallet() {
   updateHeaderWallet(activeWallet);
   $('reset-btn').style.display = 'inline';
   $('wallet-input').classList.remove('invalid');
+  $('browse-btn').disabled = false;
 
-  if (changed && collectionOrder.length > 0) {
-    refetchAll();
-  } else if (collectionOrder.length === 0) {
-    updatePageState();
+  if (changed) {
+    resetBrowse();
+    if (collectionOrder.length > 0) refetchAll();
   }
+  if (collectionOrder.length === 0) updatePageState();
 }
 
 function clearWallet() {
@@ -525,7 +612,9 @@ function clearWallet() {
   $('wallet-input').value = '';
   $('wallet-input').classList.remove('invalid');
   $('reset-btn').style.display = 'none';
+  $('browse-btn').disabled = true;
   $('header-wallet').textContent = 'Enter a wallet to get started';
+  resetBrowse();
   // Reset all loaded collections back to pending
   for (const slug of collectionOrder) {
     const c = collections[slug];
@@ -554,20 +643,24 @@ function onSlugInput() {
   setStatus('', '');
 }
 
-function addCollection() {
+function addCollection(slugOverride) {
   const input = $('slug-input');
-  const slug  = input.value.trim().toLowerCase();
+  const slug  = slugOverride != null ? String(slugOverride) : input.value.trim().toLowerCase();
 
   if (!slug) return;
   if (!SLUG_RE.test(slug)) {
-    input.classList.add('invalid');
-    setStatus('Invalid slug. Use lowercase letters, numbers, and hyphens only.', 'error');
+    if (slugOverride == null) {
+      input.classList.add('invalid');
+      setStatus('Invalid slug. Use lowercase letters, numbers, and hyphens only.', 'error');
+    }
     return;
   }
 
-  input.value = '';
-  input.classList.remove('invalid');
-  setStatus('', '');
+  if (slugOverride == null) {
+    input.value = '';
+    input.classList.remove('invalid');
+    setStatus('', '');
+  }
 
   if (collections[slug]) {
     // Already exists — re-fetch if errored
@@ -613,6 +706,108 @@ function refetchAll() {
   for (const slug of collectionOrder) {
     fetchCollection(slug);
   }
+}
+
+// ── Browse wallet dropdown ────────────────────────────────────────
+function slugToLabel(slug) {
+  return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+const CHAIN_SHORT = { ethereum: 'ETH', ape_chain: 'APE', base: 'BASE', matic: 'POLY' };
+
+function resetBrowse() {
+  browse.loaded   = false;
+  browse.loading  = false;
+  browse.results  = [];
+  browse.selected = new Set();
+  $('browse-panel').style.display = 'none';
+  $('browse-list').innerHTML = '<div class="browse-loading">Scanning Ethereum, ApeChain, Base…</div>';
+  $('browse-sel-count').textContent = '0 selected';
+  $('browse-add-btn').disabled = true;
+}
+
+function toggleBrowse() {
+  const panel = $('browse-panel');
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) { panel.style.display = 'none'; return; }
+  panel.style.display = 'flex';
+  if (!browse.loaded && !browse.loading) loadBrowseCollections();
+}
+
+async function loadBrowseCollections() {
+  if (!activeWallet) return;
+  browse.loading = true;
+  $('browse-list').innerHTML = '<div class="browse-loading">Scanning Ethereum, ApeChain, Base…</div>';
+
+  try {
+    const resp = await fetch('/api/wallet-collections?wallet=' + encodeURIComponent(activeWallet));
+    if (!resp.ok) throw new Error('scan failed');
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    browse.results = data.collections || [];
+    browse.loaded  = true;
+    renderBrowseList();
+  } catch {
+    $('browse-list').innerHTML = '<div class="browse-empty">Scan failed — enter slugs manually above.</div>';
+  }
+  browse.loading = false;
+}
+
+function renderBrowseList() {
+  const list = $('browse-list');
+  if (browse.results.length === 0) {
+    list.innerHTML = '<div class="browse-empty">No NFTs found on Ethereum, ApeChain, or Base.</div>';
+    return;
+  }
+  list.innerHTML = browse.results.map(({ slug, chain }) => {
+    const isAdded = !!collections[slug];
+    const checked = browse.selected.has(slug);
+    const badge   = CHAIN_SHORT[chain] || chain;
+    return '<label class="browse-item' + (isAdded ? ' already-added' : '') + '" title="' + esc(slug) + '">' +
+      '<input type="checkbox" value="' + esc(slug) + '"' +
+        (checked || isAdded ? ' checked' : '') +
+        (isAdded ? ' disabled' : '') +
+        ' onchange="onBrowseCheck(this)">' +
+      '<div class="browse-item-info">' +
+        '<div class="browse-item-name">' + esc(slugToLabel(slug)) + '</div>' +
+        '<div class="browse-item-slug">' + esc(slug) + '</div>' +
+      '</div>' +
+      '<span class="browse-chain-badge">' + esc(badge) + '</span>' +
+    '</label>';
+  }).join('');
+  updateBrowseFooter();
+}
+
+function onBrowseCheck(cb) {
+  if (cb.checked) browse.selected.add(cb.value);
+  else            browse.selected.delete(cb.value);
+  updateBrowseFooter();
+}
+
+function updateBrowseFooter() {
+  const n = browse.selected.size;
+  $('browse-sel-count').textContent = n + ' selected';
+  $('browse-add-btn').disabled = n === 0;
+}
+
+function selectAllBrowse() {
+  browse.selected = new Set(browse.results.filter(r => !collections[r.slug]).map(r => r.slug));
+  renderBrowseList();
+}
+
+function clearBrowseSel() {
+  browse.selected.clear();
+  renderBrowseList();
+}
+
+function addBrowseSelected() {
+  const slugs = [...browse.selected];
+  browse.selected.clear();
+  $('browse-panel').style.display = 'none';
+  for (const slug of slugs) addCollection(slug);
+  // Refresh list to show newly-added items as dimmed
+  if (browse.loaded) renderBrowseList();
 }
 
 // ── Fetch ─────────────────────────────────────────────────────────
@@ -704,7 +899,47 @@ function rebuildAndSort() {
       all.push(...c.nfts);
     }
   }
+  updateTraitSortOptions();
   applySort(all);
+}
+
+function updateTraitSortOptions() {
+  const sel      = $('sort-sel');
+  const prevVal  = sel.value;
+
+  // Remove existing dynamic optgroup
+  const existing = document.getElementById('trait-optgroup');
+  if (existing) existing.remove();
+
+  // Collect unique trait types from all loaded collections
+  const traitTypes = new Set();
+  for (const slug of collectionOrder) {
+    const c = collections[slug];
+    if (c?.status === 'loaded') {
+      for (const nft of c.nfts) {
+        for (const t of (nft.traits || [])) {
+          if (t.trait_type) traitTypes.add(t.trait_type);
+        }
+      }
+    }
+  }
+  if (traitTypes.size === 0) return;
+
+  const og = document.createElement('optgroup');
+  og.id    = 'trait-optgroup';
+  og.label = 'By trait';
+  [...traitTypes].sort().forEach(type => {
+    const opt   = document.createElement('option');
+    opt.value   = 'trait:' + type;
+    opt.text    = type;
+    og.appendChild(opt);
+  });
+  sel.appendChild(og);
+
+  // Restore previous selection if it still exists in the rebuilt list
+  if (prevVal && sel.querySelector('option[value="' + prevVal.replace(/"/g, '\\"') + '"]')) {
+    sel.value = prevVal;
+  }
 }
 
 function applySort(items) {
@@ -724,6 +959,15 @@ function applySort(items) {
     return ci !== 0 ? ci : +b.identifier - +a.identifier;
   });
   else if (sort === 'random') view.sort(() => Math.random() - 0.5);
+  else if (sort.startsWith('trait:')) {
+    const traitType = sort.slice(6);
+    view.sort((a, b) => {
+      const av = String((a.traits || []).find(t => t.trait_type === traitType)?.value ?? '￿');
+      const bv = String((b.traits || []).find(t => t.trait_type === traitType)?.value ?? '￿');
+      const cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+      return cmp !== 0 ? cmp : +a.identifier - +b.identifier;
+    });
+  }
 
   renderGrid(view);
   savePrefs();
@@ -1122,8 +1366,20 @@ function $(id) { return document.getElementById(id); }
   loadPrefs();
   applyUrlParams();
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeLightbox();
+      $('browse-panel').style.display = 'none';
+    }
+  });
   $('lb-backdrop').addEventListener('click', e => { if (e.target === $('lb-backdrop')) closeLightbox(); });
+  document.addEventListener('click', e => {
+    const panel = $('browse-panel');
+    if (panel.style.display === 'none') return;
+    if (!$('browse-btn').closest('.browse-wrap').contains(e.target)) {
+      panel.style.display = 'none';
+    }
+  });
 
   // If URL params populated wallet + collections, start fetching
   if (activeWallet && collectionOrder.length > 0) {
