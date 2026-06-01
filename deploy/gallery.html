@@ -11,9 +11,6 @@
   <!-- Fonts -->
   <link rel="stylesheet" href="colors_and_type.css">
 
-  <!-- Rarity scoring -->
-  <script src="rarity.js"></script>
-
   <style>
     :root {
       /* ── Brand palette ───────────────────────────── */
@@ -506,19 +503,6 @@
       pointer-events: none; z-index: 3;
     }
 
-    /* Rarity rank badge — top-right corner */
-    .card-rarity-badge {
-      position: absolute; top: 6px; right: 6px;
-      background: var(--magenta); color: var(--cream);
-      font-family: var(--font-body);
-      font-weight: 800;
-      font-size: 9px;
-      padding: 3px 7px;
-      border-radius: 99px;
-      letter-spacing: 0.04em;
-      pointer-events: none; z-index: 4;
-    }
-
     /* ── Loading skeleton ── */
     .skeleton-grid {
       display: grid;
@@ -803,7 +787,6 @@
       <option value="bg-desc">Background Z → A</option>
       <option value="oo-first">1/1 first</option>
       <option value="random">Random shuffle</option>
-      <option value="rarity_asc" id="sort-rarity-option" style="display:none">Rarity ↑ (rarest first)</option>
     </select>
   </div>
   <div class="toolbar-sep" id="companion-sep" style="display:none"></div>
@@ -934,10 +917,6 @@ let activeWallet     = OWNER_WALLET;
 let activeCollection = 'appreciators-originals';
 let currentLbNft     = null;
 let activeCompanions = new Set();
-
-let rarityMap     = new Map();  // Map<slug, Map<tokenId, { score, rank, percentile }>>
-let traitData     = {};         // slug → traits response (includes total_supply)
-let rarityLoading = false;
 
 // ── Collection picker ────────────────────────────────────────────
 function setCollection(slug) {
@@ -1143,7 +1122,6 @@ async function fetchAll() {
         try {
           const batch = await fetchCollectionNFTs(slug);
           allNfts.push(...batch);
-          fetchRarity(slug); // non-blocking — runs while next collection loads
         } catch (err) {
           errors.push(conf.label);
           console.error('Failed to fetch', slug, err);
@@ -1155,7 +1133,6 @@ async function fetchAll() {
       }
 
     } else {
-
       let nextCursor = null;
       let page = 0;
       do {
@@ -1189,7 +1166,6 @@ async function fetchAll() {
     );
 
     applySort();
-    if (!isAll) fetchRarity(activeCollection); // non-blocking
 
     const ooList = allNfts.filter(isOO);
     if (ooList.length) {
@@ -1217,49 +1193,6 @@ async function fetchAll() {
   }
 
   $('refresh-btn').disabled = false;
-}
-
-// ── Rarity ───────────────────────────────────────────────────────
-// Pre-computed rank files keyed by slug. Format: { "tokenId": rank }
-const RARITY_FILES = {
-  'appreciators-originals': 'rarity-originals.json',
-};
-
-async function fetchRarity(slug) {
-  try {
-    rarityLoading = true;
-
-    const precomputed = RARITY_FILES[slug];
-    if (precomputed) {
-      // Load pre-computed global ranks (covers all tokens in collection)
-      const res = await fetch(precomputed);
-      if (!res.ok) throw new Error('rarity file ' + res.status);
-      const rankObj = await res.json(); // { tokenId: rank }
-      const total_supply = 5858; // Originals total supply
-
-      const map = new Map();
-      for (const [tokenId, rank] of Object.entries(rankObj)) {
-        map.set(tokenId, { rank, percentile: (rank / total_supply) * 100 });
-      }
-      rarityMap.set(slug, map);
-    } else {
-      // Fallback: compute from held tokens (correct scores, wallet-relative ranks)
-      const res = await fetch('/api/traits?collection=' + encodeURIComponent(slug));
-      if (!res.ok) throw new Error('traits ' + res.status);
-      const traitCategories = await res.json();
-      traitData[slug] = traitCategories;
-
-      const nftsForSlug = allNfts.filter(n => n._collection === slug);
-      const supply = traitCategories.total_supply || nftsForSlug.length;
-      rarityMap.set(slug, computeRarity(nftsForSlug, traitCategories, supply));
-    }
-
-    document.getElementById('sort-rarity-option').style.display = '';
-    rarityLoading = false;
-  } catch (e) {
-    console.warn('[rarity] fetch failed for', slug, e.message);
-    rarityLoading = false;
-  }
 }
 
 // ── Sort & Render ────────────────────────────────────────────────
@@ -1292,28 +1225,6 @@ function applySort() {
     return d !== 0 ? d : +a.identifier - +b.identifier;
   });
   else if (sort === 'random')   view.sort(() => Math.random() - 0.5);
-  else if (sort === 'rarity_asc') {
-    if (activeCollection === 'all') {
-      view.sort((a, b) => {
-        const slugA = a._collection || activeCollection;
-        const slugB = b._collection || activeCollection;
-        const supplyA = traitData[slugA]?.total_supply || 1;
-        const supplyB = traitData[slugB]?.total_supply || 1;
-        const rA = rarityMap.get(slugA)?.get(String(a.identifier));
-        const rB = rarityMap.get(slugB)?.get(String(b.identifier));
-        const pctA = rA ? rA.rank / supplyA : Infinity;
-        const pctB = rB ? rB.rank / supplyB : Infinity;
-        return pctA - pctB;
-      });
-    } else {
-      const rMap = rarityMap.get(activeCollection) || new Map();
-      view.sort((a, b) => {
-        const ra = rMap.get(String(a.identifier))?.rank ?? Infinity;
-        const rb = rMap.get(String(b.identifier))?.rank ?? Infinity;
-        return ra - rb;
-      });
-    }
-  }
   view = applyCompanionFilter(view);
   const total = allNfts.length;
   if (total > 0) {
@@ -1350,9 +1261,6 @@ function renderGrid(items) {
       ? '<div class="card-coll-badge">' + esc(COLLECTIONS[slug]?.label || '') + '</div>'
       : '';
 
-    const rarity = rarityMap.get(slug)?.get(String(id));
-    const rarityBadge = rarity ? '<div class="card-rarity-badge">#' + rarity.rank + '</div>' : '';
-
     const isVid = isVideoUrl(img);
     const mediaEl = isVid
       ? '<video src="' + esc(img) + '" autoplay muted loop playsinline oncanplay="this.classList.add(\'vis\')"></video>'
@@ -1360,7 +1268,6 @@ function renderGrid(items) {
     return '<div class="nft-card' + (oo?' oo':'') + '" onclick="openLightbox(' + i + ')" title="' + esc(nm) + '">' +
       '<div class="card-oo-pip"></div>' +
       badge +
-      rarityBadge +
       mediaEl +
       '<div class="card-overlay"><div class="card-label">#' + esc(String(id)) + (showBadge ? '<br><span style="opacity:.8;font-size:8px">' + esc(COLLECTIONS[slug]?.label || '') + '</span>' : '') + '</div></div>' +
       '</div>';
@@ -1395,7 +1302,7 @@ function loadPrefs() {
     const p = JSON.parse(localStorage.getItem(LS_PREFS) || '{}');
     if (p.cols) { $('cols-range').value = p.cols; $('cols-val').textContent = p.cols; $('nft-grid').style.setProperty('--cols', p.cols); }
     if (p.gap)  { $('gap-range').value  = p.gap;  $('gap-val').textContent  = p.gap+'px'; $('nft-grid').style.setProperty('--gap', p.gap+'px'); }
-    if (p.sort) $('sort-sel').value = p.sort === 'rarity_asc' ? 'id-asc' : p.sort;
+    if (p.sort) $('sort-sel').value = p.sort;
     if (p.collection && COLLECTIONS[p.collection]) {
       activeCollection = p.collection;
       document.querySelectorAll('.coll-btn').forEach(b => {
@@ -1433,11 +1340,6 @@ function openLightbox(i) {
     if (conf.chainLabel) metaHtml += ' <span style="opacity:.6;font-size:.72rem">' + esc(conf.chainLabel) + '</span>';
   }
   metaHtml += ' &nbsp;·&nbsp; <a href="' + itemUrl + '" target="_blank" rel="noopener">View on OpenSea ↗</a>';
-  const lbRarity = rarityMap.get(slug)?.get(String(id));
-  if (lbRarity) {
-    metaHtml += ' &nbsp;·&nbsp; <span style="font-weight:800;color:var(--navy)">Rarity Rank #' + lbRarity.rank + '</span>'
-      + ' <span style="color:var(--ink-dim)">(top ' + lbRarity.percentile.toFixed(1) + '%)</span>';
-  }
   $('lb-meta').innerHTML = metaHtml;
 
   $('lb-panel').classList.toggle('oo', oo);
