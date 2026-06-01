@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appreciators Gallery</title>
+  <meta name="description" content="Appreciators NFT collections on ApeChain & Ethereum">
+  <meta property="og:title" content="Appreciators Gallery">
+  <meta property="og:description" content="NFT collections by Appreciators">
+
+  <!-- Fonts -->
+  <link rel="stylesheet" href="colors_and_type.css">
+
+  <style>
+    :root {
+      /* ── Brand palette ───────────────────────────── */
+      --navy:        #02085b;
+      --navy-soft:   #0a1380;
+      --sky:         #0299d0;
+      --yellow:      #ffc412;
+      --yellow-soft: #ffe07a;
+      --magenta:     #d11e54;
+      --magenta-soft:#e36488;
+      --green:       #64d32e;
+      --cream:       #fffeff;
+      --white:       #ffffff;
+      --grey-100:    #f3f4f6;
+      --grey-200:    #e5e7eb;
+      --grey-400:    #9ca3af;
+      --grey-600:    #6b7280;
+
+      /* ── Semantic ────────────────────────────────── */
+      --bg:        var(--cream);
+      --gap-color: var(--cream);
+      --surface:   var(--white);
+      --surface2:  var(--grey-100);
+      --ink:       var(--navy);
+      --ink-dim:   var(--grey-600);
+      --ink-mute:  var(--grey-400);
+      --border:    var(--navy);
+      --status-err:    var(--magenta);
+      --status-ok:     var(--green);
+      --status-load:   var(--sky);
+
+      /* Sticker shadow */
+      --sh:       4px 4px 0 0 var(--navy);
+      --sh-yel:   4px 4px 0 0 var(--yellow);
+      --sh-mag:   4px 4px 0 0 var(--magenta);
+      --sh-sky:   4px 4px 0 0 var(--sky);
+      --sh-sm:    3px 3px 0 0 var(--navy);
+      --sh-lg:    6px 6px 0 0 var(--navy);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-weight: 500;
+      min-height: 100vh;
+      transition: background 0.2s;
+    }
+
+    /* ── Header ── */
+    .header { padding: 48px 28px 0; max-width: 1800px; margin: 0 auto; }
+    .header h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+    .header h1 em {
+      font-style: normal;
+      display: inline-block;
+      background: var(--yellow);
+      color: var(--navy);
+      padding: 0.05em 0.3em;
+      border-radius: 0.18em;
+      transform: rotate(-2deg);
+      margin-left: 0.1em;
+    }
+    .header-meta {
+      margin-top: 18px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      font-size: 0.85rem; color: var(--ink-dim);
+      font-weight: 600;
+    }
+    .header-meta .dot { color: var(--ink-mute); }
+    .header-meta a {
+      color: var(--navy);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 2px;
+      text-decoration-color: var(--sky);
+      font-weight: 700;
+      transition: color 0.15s;
+    }
+    .header-meta a:hover { color: var(--magenta); text-decoration-color: var(--magenta); }
+    #header-wallet {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--navy);
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      border-radius: 999px;
+      padding: 4px 12px;
+      cursor: default;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--navy); color: var(--cream);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 0.72rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: default;
+    }
+    .pill.chain { background: var(--sky); color: var(--cream); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 3px solid var(--navy);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: transform 0.12s, box-shadow 0.12s;
+      white-space: nowrap;
+    }
+    .btn-gold {
+      background: var(--navy); color: var(--cream);
+      box-shadow: var(--sh-yel);
+    }
+    .btn-gold:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 var(--yellow);
+    }
+    .btn-gold:active:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 0 var(--yellow);
+    }
+    .btn-ghost {
+      background: var(--cream); color: var(--navy);
+      box-shadow: none;
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--yellow);
+      box-shadow: var(--sh-sm);
+      transform: translate(-1px, -1px);
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    /* ── Collection picker ── */
+    .collection-picker {
+      padding: 28px 28px 0; max-width: 1800px; margin: 0 auto;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .picker-label {
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--magenta);
+      white-space: nowrap;
+      margin-right: 6px;
+    }
+    .coll-btn {
+      padding: 7px 16px; border-radius: 999px;
+      border: 2px solid var(--navy);
+      background: var(--cream); color: var(--navy);
+      font-family: var(--font-body);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.12s; white-space: nowrap;
+    }
+    .coll-btn:hover {
+      background: var(--yellow-soft);
+      transform: translate(-1px, -1px);
+      box-shadow: 2px 2px 0 0 var(--navy);
+    }
+    .coll-btn.active {
+      background: var(--navy); color: var(--cream);
+      box-shadow: 3px 3px 0 0 var(--yellow);
+    }
+    .coll-btn.active:hover {
+      background: var(--navy-soft);
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 0 var(--yellow);
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+      padding: 20px 28px 0; max-width: 1800px; margin: 0 auto;
+    }
+    .toolbar-group { display: flex; align-items: center; gap: 8px; }
+    .toolbar-group label {
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 120px; height: 6px;
+      border-radius: 3px;
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--magenta); border: 2px solid var(--navy);
+      cursor: pointer; transition: transform 0.1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.18); }
+    .range-val {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--navy);
+      font-weight: 700;
+      min-width: 30px;
+      text-align: right;
+    }
+    select {
+      background: var(--cream);
+      color: var(--navy);
+      border: 2px solid var(--navy);
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-family: var(--font-body);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      outline: none; cursor: pointer;
+      transition: box-shadow 0.12s;
+    }
+    select:focus, select:hover {
+      box-shadow: 2px 2px 0 0 var(--navy);
+    }
+    .toolbar-sep {
+      width: 2px; height: 28px;
+      background: var(--navy);
+      opacity: 0.25;
+      border-radius: 1px;
+    }
+    input[type="color"] {
+      -webkit-appearance: none; appearance: none;
+      width: 32px; height: 32px;
+      padding: 3px; border-radius: 8px;
+      border: 2px solid var(--navy);
+      background: var(--cream);
+      cursor: pointer; vertical-align: middle;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 5px; }
+
+    /* ── Companion filter dropdown ── */
+    .companion-dropdown { position: relative; }
+    .companion-btn {
+      background: var(--cream); color: var(--navy);
+      border: 2px solid var(--navy);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-family: var(--font-body);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      outline: none; cursor: pointer;
+      transition: box-shadow 0.12s, background 0.12s;
+      white-space: nowrap;
+    }
+    .companion-btn:hover { box-shadow: 2px 2px 0 0 var(--navy); }
+    .companion-btn.active {
+      background: var(--magenta);
+      color: var(--cream);
+      box-shadow: 3px 3px 0 0 var(--navy);
+    }
+    .companion-panel {
+      position: absolute; top: calc(100% + 8px); left: 0;
+      background: var(--cream);
+      border: 3px solid var(--navy);
+      border-radius: 12px;
+      padding: 8px 0; min-width: 180px;
+      z-index: 100;
+      box-shadow: var(--sh);
+    }
+    .companion-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--navy);
+      transition: background 0.1s; user-select: none;
+    }
+    .companion-item:hover { background: var(--yellow-soft); }
+    .companion-item input[type="checkbox"] {
+      accent-color: var(--magenta);
+      width: 16px; height: 16px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .companion-divider {
+      height: 2px; background: var(--navy);
+      margin: 4px 12px; opacity: 0.25;
+    }
+
+    /* ── Wallet search ── */
+    .wallet-search {
+      padding: 28px 28px 0; max-width: 1800px; margin: 0 auto;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    .wallet-input-wrap {
+      flex: 1; min-width: 300px; max-width: 560px;
+      position: relative;
+      display: flex; align-items: center;
+      background: var(--cream);
+      border: 3px solid var(--navy);
+      border-radius: 999px;
+      padding: 4px 4px 4px 18px;
+      transition: box-shadow 0.12s;
+    }
+    .wallet-input-wrap:focus-within {
+      box-shadow: var(--sh-yel);
+    }
+    .wallet-input-wrap svg {
+      flex-shrink: 0; color: var(--navy); margin-right: 10px;
+    }
+    #wallet-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem; color: var(--navy);
+      padding: 8px 0;
+      letter-spacing: 0.02em;
+    }
+    #wallet-input::placeholder {
+      color: var(--ink-dim);
+      font-family: var(--font-body);
+      font-weight: 500;
+      font-style: italic;
+    }
+    #wallet-input.invalid {
+      color: var(--magenta);
+    }
+    .wallet-input-wrap:has(#wallet-input.invalid) {
+      border-color: var(--magenta);
+    }
+    .wallet-reset {
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sky);
+      cursor: pointer;
+      background: none; border: none; padding: 4px 0;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      text-decoration-thickness: 2px;
+      white-space: nowrap;
+    }
+    .wallet-reset:hover { color: var(--magenta); }
+
+    /* ── Status bar ── */
+    .status-bar {
+      padding: 22px 28px 0; max-width: 1800px; margin: 0 auto; min-height: 44px;
+    }
+    .status-line { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .status-msg {
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--ink-dim);
+    }
+    .status-msg.loading { color: var(--status-load); }
+    .status-msg.error   { color: var(--status-err); }
+    .status-msg.success { color: var(--status-ok);  }
+    .nft-count {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cream);
+      padding: 4px 12px;
+      background: var(--navy);
+      border-radius: 999px;
+    }
+    .oo-badge {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cream);
+      padding: 4px 12px;
+      background: var(--magenta);
+      border-radius: 999px;
+    }
+    .progress-track {
+      height: 4px; background: var(--grey-200);
+      border: 2px solid var(--navy);
+      border-radius: 999px;
+      margin-top: 12px; overflow: hidden; display: none;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--magenta);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    /* ── Grid ── */
+    .grid-outer { padding: 20px 28px 80px; max-width: 1800px; margin: 0 auto; }
+    #nft-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 9), 1fr);
+      gap: var(--gap, 4px);
+      background: var(--gap-color);
+      padding: var(--gap, 4px);
+      border: 3px solid var(--navy);
+      border-radius: 14px;
+      box-shadow: var(--sh);
+      transition: background 0.2s;
+    }
+    .nft-card {
+      position: relative; aspect-ratio: 1;
+      background: var(--grey-100);
+      overflow: hidden; cursor: pointer;
+      border-radius: 4px;
+      transition: transform 0.18s cubic-bezier(.25,.8,.25,1), box-shadow 0.18s;
+    }
+    .nft-card:hover {
+      transform: scale(1.06);
+      z-index: 2;
+      box-shadow: 0 6px 0 0 var(--navy), 0 12px 24px rgba(2,8,91,0.25);
+    }
+    .nft-card.oo {
+      box-shadow: 0 0 0 3px var(--magenta), 0 0 0 5px var(--navy);
+      z-index: 1;
+    }
+    .nft-card.oo:hover {
+      box-shadow: 0 0 0 3px var(--magenta), 0 0 0 5px var(--navy), 0 12px 24px rgba(209,30,84,0.35);
+    }
+    .nft-card img, .nft-card video {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      opacity: 0; transition: opacity 0.35s ease;
+    }
+    .nft-card img.vis, .nft-card video.vis { opacity: 1; }
+    .card-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(2,8,91,0.85) 0%, transparent 45%);
+      opacity: 0; transition: opacity 0.2s;
+      display: flex; align-items: flex-end; justify-content: center; padding: 8px;
+    }
+    .nft-card:hover .card-overlay { opacity: 1; }
+    .card-label {
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--cream);
+      text-align: center; line-height: 1.3;
+    }
+    .nft-card.oo .card-label { color: var(--yellow); }
+    .card-oo-pip {
+      position: absolute; top: 6px; right: 6px;
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--magenta);
+      border: 2px solid var(--cream);
+      display: none;
+      z-index: 3;
+    }
+    .nft-card.oo .card-oo-pip { display: block; }
+
+    /* Collection badge shown in All-Collections mode */
+    .card-coll-badge {
+      position: absolute; top: 6px; left: 6px;
+      background: var(--navy); color: var(--cream);
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 9px;
+      padding: 3px 7px;
+      border-radius: 99px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      pointer-events: none; z-index: 3;
+    }
+
+    /* ── Loading skeleton ── */
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 9), 1fr);
+      gap: var(--gap, 4px);
+      padding: var(--gap, 4px);
+      border: 3px solid var(--navy);
+      border-radius: 14px;
+      background: var(--gap-color);
+    }
+    .skeleton-card {
+      aspect-ratio: 1; border-radius: 4px;
+      background: linear-gradient(90deg, var(--grey-100) 25%, var(--grey-200) 50%, var(--grey-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── Empty / error state ── */
+    .empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--ink-dim);
+      background: var(--cream);
+      border: 3px dashed var(--navy);
+      border-radius: 14px;
+    }
+    .empty svg { margin-bottom: 18px; color: var(--magenta); opacity: 0.8; }
+    .empty h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: var(--navy);
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+    .empty p {
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 500;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+      color: var(--ink-dim);
+    }
+
+    /* ── Lightbox ── */
+    .lb-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(2, 8, 91, 0.78);
+      z-index: 900; display: none; align-items: center; justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(6px);
+    }
+    .lb-backdrop.open { display: flex; animation: fadein 0.2s ease; }
+    @keyframes fadein { from { opacity:0; } to { opacity:1; } }
+    .lb-panel {
+      background: var(--cream);
+      border: 3px solid var(--navy);
+      border-radius: 18px;
+      max-width: 680px; width: 100%;
+      max-height: 90vh; overflow-y: auto; overflow-x: hidden;
+      position: relative;
+      box-shadow: var(--sh-lg);
+      animation: popIn 0.22s cubic-bezier(.34,1.56,.64,1);
+    }
+    .lb-panel.oo {
+      border-color: var(--magenta);
+      box-shadow: 6px 6px 0 0 var(--magenta);
+    }
+    @keyframes popIn { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
+    .lb-img-wrap {
+      position: relative; background: var(--navy);
+      border-radius: 14px 14px 0 0;
+      overflow: hidden; line-height: 0;
+      border-bottom: 3px solid var(--navy);
+    }
+    .lb-img-wrap img, .lb-img-wrap video {
+      width: 100%; max-height: 55vh; object-fit: contain; display: block;
+    }
+    .lb-close {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      color: var(--navy);
+      width: 34px; height: 34px; border-radius: 50%;
+      cursor: pointer; font-size: 0.95rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, transform 0.12s; z-index: 1;
+    }
+    .lb-close:hover {
+      background: var(--magenta); color: var(--cream);
+      transform: scale(1.08);
+    }
+    .lb-oo-ribbon {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--magenta); color: var(--cream);
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 2px solid var(--navy);
+      display: none;
+    }
+    .lb-panel.oo .lb-oo-ribbon { display: block; }
+    .lb-body { padding: 26px 28px 30px; }
+    .lb-name {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.05;
+      color: var(--navy);
+    }
+    .lb-meta {
+      margin-top: 10px;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-dim);
+    }
+    .lb-meta a {
+      color: var(--sky);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 2px;
+      font-weight: 800;
+    }
+    .lb-meta a:hover { color: var(--magenta); }
+    .lb-dl-btn {
+      margin-top: 18px;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      background: var(--navy); color: var(--cream);
+      border: 3px solid var(--navy);
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow: var(--sh-yel);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .lb-dl-btn:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 var(--yellow);
+    }
+    .lb-dl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .lb-traits-heading {
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--magenta);
+      margin: 24px 0 12px;
+    }
+    .traits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 8px;
+    }
+    .trait {
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      border-radius: 10px;
+      padding: 10px 12px;
+      line-height: 1.4;
+    }
+    .trait.special {
+      border-color: var(--magenta);
+      background: var(--yellow-soft);
+      box-shadow: 2px 2px 0 0 var(--magenta);
+    }
+    .trait-type {
+      font-family: var(--font-body);
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      color: var(--ink-dim);
+      margin-bottom: 4px;
+    }
+    .trait.special .trait-type { color: var(--magenta); }
+    .trait-val {
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    canvas#export-canvas { display: none; }
+
+    @media (max-width: 640px) {
+      .header, .wallet-search, .collection-picker, .toolbar, .status-bar, .grid-outer {
+        padding-left: 16px; padding-right: 16px;
+      }
+      .header { padding-top: 32px; }
+      #nft-grid, .skeleton-grid { --cols: 4 !important; }
+      .lb-panel { border-radius: 14px; }
+      .lb-body { padding: 20px 18px 24px; }
+      .traits-grid { grid-template-columns: repeat(2, 1fr); }
+      .toolbar { gap: 12px; }
+      .header-meta { gap: 8px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <h1>Appreciators <em id="coll-name">Originals</em></h1>
+  <div class="header-meta">
+    <span id="header-wallet" title="0x50fc8d1d8dca2605c26a3a8274a5430132e2af13">0x50fc…2af13</span>
+    <span class="dot">·</span>
+    <span class="pill chain" id="chain-pill">⬡ ApeChain</span>
+    <span class="dot" id="os-dot">·</span>
+    <a id="os-link" href="https://opensea.io/collection/appreciators-originals" target="_blank" rel="noopener">OpenSea ↗</a>
+    <span class="dot" id="contract-dot">·</span>
+    <a id="contract-link" href="https://apechain.com/explorer/address/0xd92b263B48F74d0cd21F9d2C01B6CD06f2Ab96Cd" target="_blank" rel="noopener">Contract ↗</a>
+    <span class="dot">·</span>
+    <a href="animated.html">✦ Animated</a>
+    <span class="dot">·</span>
+    <a href="index.html">← Home</a>
+  </div>
+</header>
+
+<div class="wallet-search">
+  <div class="wallet-input-wrap">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      <rect x="1" y="3" width="12" height="9" rx="2"/>
+      <path d="M9 7h2M1 6h12"/>
+    </svg>
+    <input id="wallet-input" type="text" placeholder="Enter any wallet address (0x…) to check their holdings"
+      autocomplete="off" spellcheck="false" maxlength="42"
+      oninput="onWalletInput()" onkeydown="if(event.key==='Enter')searchWallet()">
+  </div>
+  <button class="btn btn-gold" onclick="searchWallet()">Search</button>
+  <button class="wallet-reset" id="reset-btn" onclick="resetWallet()" style="display:none">← Back to owner</button>
+</div>
+
+<!-- Collection picker -->
+<div class="collection-picker">
+  <span class="picker-label">Collection</span>
+  <button class="coll-btn" data-coll="all" onclick="setCollection('all')">✦ All</button>
+  <button class="coll-btn active" data-coll="appreciators-originals" onclick="setCollection('appreciators-originals')">Originals</button>
+  <button class="coll-btn" data-coll="theappreciators-nft" onclick="setCollection('theappreciators-nft')">The Appreciators</button>
+  <button class="coll-btn" data-coll="potions-of-appreciation" onclick="setCollection('potions-of-appreciation')">Potions</button>
+  <button class="coll-btn" data-coll="appreciators-companions" onclick="setCollection('appreciators-companions')">Companions</button>
+</div>
+
+<div class="toolbar">
+  <button class="btn btn-gold" id="refresh-btn" onclick="fetchAll()">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10.5 6A4.5 4.5 0 1 1 6 1.5"/><path d="M10.5 1.5v4h-4"/></svg>
+    Refresh
+  </button>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group">
+    <label>Columns</label>
+    <input type="range" id="cols-range" min="2" max="20" value="9" oninput="setCols(this.value)">
+    <span class="range-val" id="cols-val">9</span>
+  </div>
+  <div class="toolbar-group">
+    <label>Gap</label>
+    <input type="range" id="gap-range" min="0" max="20" value="4" oninput="setGap(this.value)">
+    <span class="range-val" id="gap-val">4px</span>
+  </div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group">
+    <label>Sort</label>
+    <select id="sort-sel" onchange="applySort()">
+      <option value="id-asc">ID low → high</option>
+      <option value="id-desc">ID high → low</option>
+      <option value="id-asc-grouped">Collection · ID low → high</option>
+      <option value="id-desc-grouped">Collection · ID high → low</option>
+      <option value="bg-asc">Background A → Z</option>
+      <option value="bg-desc">Background Z → A</option>
+      <option value="oo-first">1/1 first</option>
+      <option value="random">Random shuffle</option>
+    </select>
+  </div>
+  <div class="toolbar-sep" id="companion-sep" style="display:none"></div>
+  <div class="toolbar-group" id="companion-filter-group" style="display:none">
+    <label>Companion</label>
+    <div class="companion-dropdown">
+      <button class="companion-btn" id="companion-btn" onclick="toggleCompanionDropdown()">All ▾</button>
+      <div class="companion-panel" id="companion-panel" style="display:none">
+        <label class="companion-item">
+          <input type="checkbox" id="comp-all" checked onchange="clearCompanionFilter()"> All
+        </label>
+        <div class="companion-divider"></div>
+        <label class="companion-item"><input type="checkbox" class="comp-cb" value="DevilDog" onchange="onCompanionChange()"> DevilDog</label>
+        <label class="companion-item"><input type="checkbox" class="comp-cb" value="Pigeon" onchange="onCompanionChange()"> Pigeon</label>
+        <label class="companion-item"><input type="checkbox" class="comp-cb" value="Snake" onchange="onCompanionChange()"> Snake</label>
+        <label class="companion-item"><input type="checkbox" class="comp-cb" value="Ghost" onchange="onCompanionChange()"> Ghost</label>
+        <label class="companion-item"><input type="checkbox" class="comp-cb" value="Cat" onchange="onCompanionChange()"> Cat</label>
+      </div>
+    </div>
+  </div>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-ghost" id="dl-btn" onclick="downloadGrid()" disabled>
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg>
+    Download Grid
+  </button>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group">
+    <label>BG</label>
+    <input type="color" id="bg-color" value="#fffeff" oninput="setBgColor(this.value)">
+  </div>
+  <div class="toolbar-group">
+    <label>Gap</label>
+    <input type="color" id="gap-color-input" value="#fffeff" oninput="setGapColor(this.value)">
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-line">
+    <span class="status-msg loading" id="status-msg">Loading collection…</span>
+    <span class="nft-count" id="nft-count" style="display:none"></span>
+    <span class="oo-badge" id="oo-badge" style="display:none"></span>
+  </div>
+  <div class="progress-track" id="progress-track">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<div class="grid-outer">
+  <div id="nft-grid"></div>
+  <div id="skeleton" class="skeleton-grid"></div>
+  <div id="empty-state" class="empty" style="display:none">
+    <svg width="56" height="56" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="4" width="40" height="40" rx="6"/>
+      <path d="M4 32l10-12 8 9 6-7 16 18"/>
+      <circle cx="15" cy="16" r="3"/>
+    </svg>
+    <h2 id="empty-title">Nothing here</h2>
+    <p id="empty-msg">Could not load the collection. Try refreshing.</p>
+  </div>
+</div>
+
+<div class="lb-backdrop" id="lb-backdrop">
+  <div class="lb-panel" id="lb-panel">
+    <div class="lb-img-wrap">
+      <button class="lb-close" onclick="closeLightbox()" aria-label="Close">✕</button>
+      <div class="lb-oo-ribbon">✦ ONE OF ONE</div>
+      <img id="lb-img" src="" alt="">
+      <video id="lb-video" autoplay muted loop playsinline style="display:none; width:100%; max-height:55vh; object-fit:contain;"></video>
+    </div>
+    <div class="lb-body">
+      <div class="lb-name" id="lb-name"></div>
+      <div class="lb-meta" id="lb-meta"></div>
+      <button class="lb-dl-btn" id="lb-dl-btn" onclick="downloadLightboxImage()">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg>
+        Save Image
+      </button>
+      <div class="lb-traits-heading">Traits</div>
+      <div class="traits-grid" id="lb-traits"></div>
+    </div>
+  </div>
+</div>
+
+<canvas id="export-canvas"></canvas>
+
+<script>
+// ── Collection config ─────────────────────────────────────────────
+// osChain: the chain segment used in opensea.io/item/{osChain}/{contract}/{id} URLs
+const COLLECTIONS = {
+  'all': {
+    label: 'All Collections', chainLabel: null,
+    osChain: null, contract: null, osUrl: null,
+  },
+  'appreciators-originals': {
+    label: 'Originals', chainLabel: '⬡ ApeChain',
+    osChain: 'ape_chain',
+    contract: '0xd92b263b48f74d0cd21f9d2c01b6cd06f2ab96cd',
+    osUrl: 'https://opensea.io/collection/appreciators-originals',
+  },
+  'theappreciators-nft': {
+    label: 'The Appreciators', chainLabel: 'Ξ Ethereum',
+    osChain: 'ethereum',
+    contract: '0x71772beff1fb348eb7d5f9f1e0b5f11bc49ab5e4',
+    osUrl: 'https://opensea.io/collection/theappreciators-nft',
+  },
+  'potions-of-appreciation': {
+    label: 'Potions', chainLabel: '⬡ Polygon',
+    osChain: 'polygon',
+    contract: '0x9b13da9790990172539ca136c78d2d57a761fc37',
+    osUrl: 'https://opensea.io/collection/potions-of-appreciation',
+  },
+  'appreciators-companions': {
+    label: 'Companions', chainLabel: 'Ξ Ethereum',
+    osChain: 'ethereum',
+    contract: '0xe34b204b32ef3df0818fa0e4d3bf076ca5f3c181',
+    osUrl: 'https://opensea.io/collection/appreciators-companions',
+  },
+};
+
+const COLLECTION_KEYS = Object.keys(COLLECTIONS).filter(k => k !== 'all');
+
+const LS_PREFS     = 'apprec8_prefs';
+const OWNER_WALLET = '0x50fc8d1d8dca2605c26a3a8274a5430132e2af13';
+const WALLET_RE    = /^0x[0-9a-fA-F]{40}$/;
+
+let allNfts          = [];
+let view             = [];
+let activeWallet     = OWNER_WALLET;
+let activeCollection = 'appreciators-originals';
+let currentLbNft     = null;
+let activeCompanions = new Set();
+
+// ── Collection picker ────────────────────────────────────────────
+function setCollection(slug) {
+  activeCollection = slug;
+  document.querySelectorAll('.coll-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.coll === slug);
+  });
+  updateHeaderCollection();
+  showCompanionFilter(slug === 'appreciators-originals');
+  savePrefs();
+  fetchAll();
+}
+
+function updateHeaderCollection() {
+  const conf = COLLECTIONS[activeCollection];
+  const isAll = activeCollection === 'all';
+
+  $('coll-name').textContent = conf.label;
+
+  const pill = $('chain-pill');
+  if (isAll || !conf.chainLabel) {
+    pill.style.display = 'none';
+    $('os-dot').style.display = 'none';
+  } else {
+    pill.textContent = conf.chainLabel;
+    pill.style.display = 'inline-flex';
+    $('os-dot').style.display = 'inline';
+  }
+
+  const osLink = $('os-link');
+  if (isAll) {
+    osLink.style.display = 'none';
+  } else {
+    osLink.href = conf.osUrl || '#';
+    osLink.style.display = 'inline';
+  }
+
+  const contractDot  = $('contract-dot');
+  const contractLink = $('contract-link');
+  if (activeCollection === 'appreciators-originals') {
+    contractDot.style.display  = 'inline';
+    contractLink.style.display = 'inline';
+  } else {
+    contractDot.style.display  = 'none';
+    contractLink.style.display = 'none';
+  }
+}
+
+// ── Companion filter ─────────────────────────────────────────────
+function showCompanionFilter(show) {
+  $('companion-filter-group').style.display = show ? 'flex' : 'none';
+  $('companion-sep').style.display = show ? 'block' : 'none';
+  if (!show) {
+    activeCompanions.clear();
+    document.querySelectorAll('.comp-cb').forEach(cb => cb.checked = false);
+    $('comp-all').checked = true;
+    $('companion-panel').style.display = 'none';
+    $('companion-btn').classList.remove('active');
+    updateCompanionBtn();
+  }
+}
+
+function toggleCompanionDropdown() {
+  const panel = $('companion-panel');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  $('companion-btn').classList.toggle('active', !isOpen);
+}
+
+function onCompanionChange() {
+  activeCompanions.clear();
+  document.querySelectorAll('.comp-cb:checked').forEach(cb => activeCompanions.add(cb.value));
+  updateCompanionBtn();
+  applySort();
+}
+
+function clearCompanionFilter() {
+  activeCompanions.clear();
+  document.querySelectorAll('.comp-cb').forEach(cb => cb.checked = false);
+  $('comp-all').checked = true;
+  updateCompanionBtn();
+  applySort();
+}
+
+function updateCompanionBtn() {
+  $('comp-all').checked = activeCompanions.size === 0;
+  const btn = $('companion-btn');
+  if (activeCompanions.size === 0) {
+    btn.textContent = 'All ▾';
+    btn.classList.remove('active');
+  } else if (activeCompanions.size === 1) {
+    btn.textContent = [...activeCompanions][0] + ' ▾';
+    btn.classList.add('active');
+  } else {
+    btn.textContent = activeCompanions.size + ' selected ▾';
+    btn.classList.add('active');
+  }
+}
+
+function applyCompanionFilter(items) {
+  if (activeCompanions.size === 0) return items;
+  return items.filter(n => {
+    const t = (n.traits || []).find(t => t.trait_type === 'Companion');
+    return t && activeCompanions.has(t.value);
+  });
+}
+
+// ── Skeleton ─────────────────────────────────────────────────────
+function showSkeleton(cols) {
+  const sk = $('skeleton');
+  sk.style.setProperty('--cols', cols);
+  sk.style.setProperty('--gap', $('gap-range').value + 'px');
+  sk.innerHTML = Array(parseInt(cols) * 4).fill('<div class="skeleton-card"></div>').join('');
+  sk.style.display = 'grid';
+}
+function hideSkeleton() { $('skeleton').style.display = 'none'; }
+
+// ── Wallet search ────────────────────────────────────────────────
+function onWalletInput() {
+  const val = $('wallet-input').value.trim();
+  $('wallet-input').classList.toggle('invalid', val.length > 0 && val.length === 42 && !WALLET_RE.test(val));
+}
+
+function searchWallet() {
+  const val = $('wallet-input').value.trim();
+  if (!val) { resetWallet(); return; }
+  if (!WALLET_RE.test(val)) {
+    $('wallet-input').classList.add('invalid');
+    status('Enter a valid Ethereum wallet address (0x…42 hex chars).', 'error');
+    return;
+  }
+  activeWallet = val.toLowerCase();
+  updateHeaderWallet(activeWallet);
+  $('reset-btn').style.display = activeWallet === OWNER_WALLET ? 'none' : 'inline';
+  fetchAll();
+}
+
+function resetWallet() {
+  activeWallet = OWNER_WALLET;
+  $('wallet-input').value = '';
+  $('wallet-input').classList.remove('invalid');
+  $('reset-btn').style.display = 'none';
+  updateHeaderWallet(OWNER_WALLET);
+  fetchAll();
+}
+
+function updateHeaderWallet(addr) {
+  const short = addr.slice(0, 6) + '…' + addr.slice(-5);
+  const el = $('header-wallet');
+  el.textContent = short;
+  el.title = addr;
+}
+
+// ── Core fetch: single collection page-loop ───────────────────────
+async function fetchCollectionNFTs(slug) {
+  const nfts = [];
+  let nextCursor = null;
+
+  do {
+    let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallet)
+            + '&collection=' + encodeURIComponent(slug);
+    if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
+
+    const resp = await fetch(url);
+    if (resp.status === 429) throw new Error('Rate limit hit — please wait a moment and refresh.');
+    if (!resp.ok)            throw new Error('Failed to load ' + (COLLECTIONS[slug]?.label || slug) + ' (' + resp.status + ').');
+
+    const data  = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    const batch = (data.nfts || []).map(n => ({ ...n, _collection: slug }));
+    nfts.push(...batch);
+    nextCursor = (batch.length > 0 && data.next) ? data.next : null;
+    if (nextCursor) await sleep(100);
+  } while (nextCursor);
+
+  return nfts;
+}
+
+// ── Main fetch dispatcher ─────────────────────────────────────────
+async function fetchAll() {
+  $('refresh-btn').disabled = true;
+  $('dl-btn').disabled = true;
+  $('empty-state').style.display = 'none';
+  $('nft-grid').innerHTML = '';
+  $('nft-count').style.display = 'none';
+  $('oo-badge').style.display = 'none';
+
+  const isAll = activeCollection === 'all';
+  status(isAll ? 'Loading all collections…' : 'Loading collection…', 'loading');
+  progress(10);
+  showSkeleton($('cols-range').value);
+  allNfts = [];
+
+  try {
+    if (isAll) {
+      const errors = [];
+      for (let i = 0; i < COLLECTION_KEYS.length; i++) {
+        const slug = COLLECTION_KEYS[i];
+        const conf = COLLECTIONS[slug];
+        status('Loading ' + conf.label + '…', 'loading');
+        progress(10 + (i / COLLECTION_KEYS.length) * 80);
+        try {
+          const batch = await fetchCollectionNFTs(slug);
+          allNfts.push(...batch);
+        } catch (err) {
+          errors.push(conf.label);
+          console.error('Failed to fetch', slug, err);
+        }
+        if (i < COLLECTION_KEYS.length - 1) await sleep(150);
+      }
+      if (errors.length > 0 && allNfts.length === 0) {
+        throw new Error('All collections failed to load: ' + errors.join(', '));
+      }
+
+    } else {
+      let nextCursor = null;
+      let page = 0;
+      do {
+        let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallet)
+                + '&collection=' + encodeURIComponent(activeCollection);
+        if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
+
+        const resp = await fetch(url);
+        if (resp.status === 429) throw new Error('Rate limit hit — please wait a moment and refresh.');
+        if (!resp.ok)            throw new Error('Failed to load collection (' + resp.status + ').');
+
+        const data  = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        const batch = (data.nfts || []).map(n => ({ ...n, _collection: activeCollection }));
+        allNfts.push(...batch);
+        nextCursor = (batch.length > 0 && data.next) ? data.next : null;
+        page++;
+        progress(Math.min(85, 10 + page * 25));
+        if (nextCursor) await sleep(100);
+      } while (nextCursor);
+    }
+
+    progress(100);
+    await sleep(150);
+    hideProgress();
+    hideSkeleton();
+
+    allNfts = allNfts.filter(n =>
+      n._collection !== 'appreciators-originals' || (n.traits && n.traits.length > 0)
+    );
+
+    applySort();
+
+    const ooList = allNfts.filter(isOO);
+    if (ooList.length) {
+      $('oo-badge').textContent = '✦ ' + ooList.length + ' 1/1';
+      $('oo-badge').style.display = 'inline';
+    }
+    if (allNfts.length === 0) {
+      const short = activeWallet.slice(0,6) + '…' + activeWallet.slice(-5);
+      $('empty-title').textContent = 'No NFTs found';
+      $('empty-msg').textContent = 'Wallet ' + short + ' doesn\'t hold any NFTs from '
+        + (isAll ? 'these collections' : 'this collection') + '.';
+      $('empty-state').style.display = 'block';
+    }
+    status('', '');
+    $('dl-btn').disabled = allNfts.length === 0;
+
+  } catch (err) {
+    hideProgress();
+    hideSkeleton();
+    $('empty-state').style.display = 'block';
+    $('empty-title').textContent = 'Couldn\'t load';
+    $('empty-msg').textContent = err.message || 'Unknown error.';
+    status(err.message || 'Error loading.', 'error');
+    console.error(err);
+  }
+
+  $('refresh-btn').disabled = false;
+}
+
+// ── Sort & Render ────────────────────────────────────────────────
+function applySort() {
+  const sort = $('sort-sel').value;
+  savePrefs();
+  view = [...allNfts];
+  if      (sort === 'id-asc')   view.sort((a,b) => +a.identifier - +b.identifier);
+  else if (sort === 'id-desc')  view.sort((a,b) => +b.identifier - +a.identifier);
+  else if (sort === 'id-asc-grouped') view.sort((a,b) => {
+    const ci = COLLECTION_KEYS.indexOf(a._collection) - COLLECTION_KEYS.indexOf(b._collection);
+    return ci !== 0 ? ci : +a.identifier - +b.identifier;
+  });
+  else if (sort === 'id-desc-grouped') view.sort((a,b) => {
+    const ci = COLLECTION_KEYS.indexOf(a._collection) - COLLECTION_KEYS.indexOf(b._collection);
+    return ci !== 0 ? ci : +b.identifier - +a.identifier;
+  });
+  else if (sort === 'bg-asc')  view.sort((a,b) => {
+    const av = (a.traits||[]).find(t=>t.trait_type==='Background')?.value ?? '￿';
+    const bv = (b.traits||[]).find(t=>t.trait_type==='Background')?.value ?? '￿';
+    return av < bv ? -1 : av > bv ? 1 : +a.identifier - +b.identifier;
+  });
+  else if (sort === 'bg-desc') view.sort((a,b) => {
+    const av = (a.traits||[]).find(t=>t.trait_type==='Background')?.value ?? '';
+    const bv = (b.traits||[]).find(t=>t.trait_type==='Background')?.value ?? '';
+    return bv < av ? -1 : bv > av ? 1 : +a.identifier - +b.identifier;
+  });
+  else if (sort === 'oo-first') view.sort((a,b) => {
+    const d = (isOO(a)?0:1) - (isOO(b)?0:1);
+    return d !== 0 ? d : +a.identifier - +b.identifier;
+  });
+  else if (sort === 'random')   view.sort(() => Math.random() - 0.5);
+  view = applyCompanionFilter(view);
+  const total = allNfts.length;
+  if (total > 0) {
+    $('nft-count').textContent = (activeCompanions.size > 0 && view.length !== total)
+      ? view.length + ' / ' + total + ' NFTs'
+      : total + ' NFT' + (total !== 1 ? 's' : '');
+    $('nft-count').style.display = 'inline';
+  }
+  renderGrid(view);
+}
+
+function renderGrid(items) {
+  const g = $('nft-grid');
+  const showBadge = activeCollection === 'all';
+
+  if (items.length === 0) {
+    g.innerHTML = '';
+    if (activeCompanions.size > 0 && allNfts.length > 0) {
+      $('empty-title').textContent = 'No matching Originals';
+      $('empty-msg').textContent = 'None of your Originals have the selected Companion trait. Try different companions or clear the filter.';
+    }
+    $('empty-state').style.display = 'block';
+    return;
+  }
+  $('empty-state').style.display = 'none';
+
+  g.innerHTML = items.map((n, i) => {
+    const id    = n.identifier;
+    const nm    = n.name || '#' + id;
+    const img   = n.image_url || n.display_image_url || '';
+    const oo    = isOO(n);
+    const slug  = n._collection || activeCollection;
+    const badge = showBadge
+      ? '<div class="card-coll-badge">' + esc(COLLECTIONS[slug]?.label || '') + '</div>'
+      : '';
+
+    const isVid = isVideoUrl(img);
+    const mediaEl = isVid
+      ? '<video src="' + esc(img) + '" autoplay muted loop playsinline oncanplay="this.classList.add(\'vis\')"></video>'
+      : '<img src="' + esc(img) + '" alt="' + esc(nm) + '" loading="lazy" decoding="async" onload="this.classList.add(\'vis\')" onerror="this.style.opacity=\'0.12\'">';
+    return '<div class="nft-card' + (oo?' oo':'') + '" onclick="openLightbox(' + i + ')" title="' + esc(nm) + '">' +
+      '<div class="card-oo-pip"></div>' +
+      badge +
+      mediaEl +
+      '<div class="card-overlay"><div class="card-label">#' + esc(String(id)) + (showBadge ? '<br><span style="opacity:.8;font-size:8px">' + esc(COLLECTIONS[slug]?.label || '') + '</span>' : '') + '</div></div>' +
+      '</div>';
+  }).join('');
+}
+
+// ── Toolbar ──────────────────────────────────────────────────────
+function setCols(v) { $('cols-val').textContent = v; $('nft-grid').style.setProperty('--cols', v); savePrefs(); }
+function setGap(v)  { $('gap-val').textContent = v+'px'; $('nft-grid').style.setProperty('--gap', v+'px'); savePrefs(); }
+
+function setBgColor(v) {
+  document.documentElement.style.setProperty('--bg', v);
+  savePrefs();
+}
+function setGapColor(v) {
+  document.documentElement.style.setProperty('--gap-color', v);
+  savePrefs();
+}
+
+function savePrefs() {
+  localStorage.setItem(LS_PREFS, JSON.stringify({
+    cols: $('cols-range').value,
+    gap: $('gap-range').value,
+    sort: $('sort-sel').value,
+    collection: activeCollection,
+    bgColor: $('bg-color').value,
+    gapColor: $('gap-color-input').value,
+  }));
+}
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(LS_PREFS) || '{}');
+    if (p.cols) { $('cols-range').value = p.cols; $('cols-val').textContent = p.cols; $('nft-grid').style.setProperty('--cols', p.cols); }
+    if (p.gap)  { $('gap-range').value  = p.gap;  $('gap-val').textContent  = p.gap+'px'; $('nft-grid').style.setProperty('--gap', p.gap+'px'); }
+    if (p.sort) $('sort-sel').value = p.sort;
+    if (p.collection && COLLECTIONS[p.collection]) {
+      activeCollection = p.collection;
+      document.querySelectorAll('.coll-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.coll === activeCollection);
+      });
+    }
+    if (p.bgColor)  { $('bg-color').value = p.bgColor; document.documentElement.style.setProperty('--bg', p.bgColor); }
+    if (p.gapColor) { $('gap-color-input').value = p.gapColor; document.documentElement.style.setProperty('--gap-color', p.gapColor); }
+  } catch {}
+}
+
+// ── Lightbox ─────────────────────────────────────────────────────
+function openLightbox(i) {
+  const n = view[i]; if (!n) return;
+  currentLbNft = n;
+  const oo   = isOO(n), id = n.identifier, nm = n.name || '#' + id;
+  const slug = n._collection || activeCollection;
+  const conf = COLLECTIONS[slug];
+
+  const itemUrl = conf && conf.contract
+    ? 'https://opensea.io/item/' + conf.osChain + '/' + conf.contract + '/' + id
+    : '#';
+
+  const src = n.image_url || n.display_image_url || '';
+  const isVid = isVideoUrl(src);
+  $('lb-img').style.display   = isVid ? 'none'  : 'block';
+  $('lb-video').style.display = isVid ? 'block' : 'none';
+  if (isVid) { $('lb-video').src = src; $('lb-img').src = ''; }
+  else        { $('lb-img').src  = src; $('lb-video').src = ''; }
+  $('lb-name').textContent = nm;
+
+  let metaHtml = 'Token #' + id;
+  if (activeCollection === 'all' && conf) {
+    metaHtml += ' &nbsp;·&nbsp; <span style="color:var(--magenta);font-weight:800">' + esc(conf.label) + '</span>';
+    if (conf.chainLabel) metaHtml += ' <span style="opacity:.6;font-size:.72rem">' + esc(conf.chainLabel) + '</span>';
+  }
+  metaHtml += ' &nbsp;·&nbsp; <a href="' + itemUrl + '" target="_blank" rel="noopener">View on OpenSea ↗</a>';
+  $('lb-meta').innerHTML = metaHtml;
+
+  $('lb-panel').classList.toggle('oo', oo);
+  const traits = n.traits || [];
+  $('lb-traits').innerHTML = traits.length
+    ? traits.map(t => {
+        const sp = t.trait_type === '1-1';
+        return '<div class="trait' + (sp?' special':'') + '"><div class="trait-type">' + esc(t.trait_type||'') +
+          '</div><div class="trait-val">' + esc(String(t.value??'')) + '</div></div>';
+      }).join('')
+    : '<span style="font-size:0.85rem;color:var(--ink-dim)">No traits returned</span>';
+  $('lb-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox() {
+  currentLbNft = null;
+  $('lb-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    $('lb-img').src   = '';
+    $('lb-video').src = '';
+    $('lb-video').style.display = 'none';
+    $('lb-img').style.display   = 'block';
+    const btn = $('lb-dl-btn');
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg> Save Image';
+  }, 250);
+}
+
+// ── Lightbox image download ───────────────────────────────────────
+async function downloadLightboxImage() {
+  const n = currentLbNft; if (!n) return;
+  const btn = $('lb-dl-btn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Fetching…';
+
+  const src = n.display_image_url || n.image_url || '';
+  if (!src) { btn.innerHTML = '✕ No image URL'; return; }
+
+  const slug = n._collection || activeCollection;
+  const conf = COLLECTIONS[slug];
+  const prefix = conf ? conf.label.toLowerCase().replace(/\s+/g, '_') : 'nft';
+
+  try {
+    const resp = await fetch(src, {
+      headers: { 'Accept': 'image/png,image/webp,image/*' }
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    const blob = await resp.blob();
+
+    const ct = (resp.headers.get('Content-Type') || '').toLowerCase();
+    const ext = ct.includes('avif') ? 'avif'
+              : ct.includes('webp') ? 'webp'
+              : ct.includes('gif')  ? 'gif'
+              : ct.includes('svg')  ? 'svg'
+              : ct.includes('mp4')  ? 'mp4'
+              : 'png';
+
+    const filename = 'apprec8ors_' + prefix + '_' + n.identifier + '.' + ext;
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+
+    btn.innerHTML = '✓ Saved as .' + ext;
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg> Save Image';
+    }, 2500);
+
+  } catch (err) {
+    console.error('Lightbox download failed:', err);
+    btn.innerHTML = '✕ Failed — ' + (err.message || 'unknown error');
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg> Save Image';
+    }, 3000);
+  }
+}
+
+// ── Canvas grid export ───────────────────────────────────────────
+async function downloadGrid() {
+  if (!view.length) return;
+  const btn = $('dl-btn');
+  btn.disabled = true; btn.innerHTML = '⏳ Building…';
+  const CELL=300, cols=parseInt($('cols-range').value), gap=parseInt($('gap-range').value);
+  const rows=Math.ceil(view.length/cols), W=cols*CELL+(cols-1)*gap, H=rows*CELL+(rows-1)*gap;
+  const canvas=$('export-canvas'); canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d'); ctx.fillStyle=$('bg-color').value; ctx.fillRect(0,0,W,H);
+  for (let i=0;i<view.length;i++) {
+    const n=view[i], col=i%cols, row=Math.floor(i/cols);
+    const x=col*(CELL+gap), y=row*(CELL+gap), oo=isOO(n), BW=oo?5:0;
+    const src=(n.display_image_url||n.image_url||'');
+    const img=await (isVideoUrl(src)?loadVideoFrame(src):loadImg(src));
+    if (oo){ctx.save();ctx.strokeStyle='#d11e54';ctx.lineWidth=BW*2;ctx.strokeRect(x,y,CELL,CELL);ctx.restore();}
+    if(img){try{ctx.drawImage(img,x+BW,y+BW,CELL-BW*2,CELL-BW*2);}catch{}}
+    else{ctx.fillStyle='#f3f4f6';ctx.fillRect(x+BW,y+BW,CELL-BW*2,CELL-BW*2);}
+    status('Building grid… '+(i+1)+'/'+view.length,'loading');
+  }
+  const collLabel = COLLECTIONS[activeCollection]?.label || 'gallery';
+  const safeName  = collLabel.toLowerCase().replace(/\s+/g, '_');
+  try {
+    canvas.toBlob(blob=>{
+      if(!blob||blob.size<512){status('Export failed — canvas may be tainted by CORS. Try fewer NFTs or refresh.','error');resetDlBtn();return;}
+      const url=URL.createObjectURL(blob);
+      const a=Object.assign(document.createElement('a'),{href:url,download:'apprec8ors_' + safeName + '_' + cols + 'col.png'});
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 10_000);
+      status('','');resetDlBtn();
+    },'image/png');
+  } catch(e){status('Export failed: '+e.message,'error');resetDlBtn();}
+}
+function loadImg(src){return new Promise(r=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});}
+function loadVideoFrame(src){return new Promise(r=>{const v=document.createElement('video');v.crossOrigin='anonymous';v.muted=true;v.src=src;v.onloadeddata=()=>{v.currentTime=0.001;v.onseeked=()=>r(v);};v.onerror=()=>r(null);v.load();setTimeout(()=>r(null),8000);});}
+function resetDlBtn(){$('dl-btn').disabled=false;$('dl-btn').innerHTML='<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg> Download Grid';}
+
+// ── Helpers ──────────────────────────────────────────────────────
+function isOO(n){return(n.traits||[]).some(t=>t.trait_type==='1-1'&&String(t.value).toLowerCase()==='true');}
+function isVideoUrl(url){return url&&/\.(mp4|webm|mov|ogv|ogg)(\?|$)/i.test(url);}
+function status(msg,cls){const el=$('status-msg');el.textContent=msg;el.className='status-msg'+(cls?' '+cls:'');}
+function progress(pct){$('progress-track').style.display='block';$('progress-fill').style.width=pct+'%';}
+function hideProgress(){$('progress-track').style.display='none';$('progress-fill').style.width='0%';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function $(id){return document.getElementById(id);}
+
+(function init(){
+  loadPrefs();
+  updateHeaderCollection();
+  showCompanionFilter(activeCollection === 'appreciators-originals');
+  updateHeaderWallet(OWNER_WALLET);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+  $('lb-backdrop').addEventListener('click',e=>{if(e.target===$('lb-backdrop'))closeLightbox();});
+  document.addEventListener('click', e => {
+    const panel = $('companion-panel');
+    if (!panel || panel.style.display === 'none') return;
+    if (!$('companion-btn').closest('.companion-dropdown').contains(e.target)) {
+      panel.style.display = 'none';
+      $('companion-btn').classList.remove('active');
+    }
+  });
+  fetchAll();
+})();
+</script>
+</body>
+</html>

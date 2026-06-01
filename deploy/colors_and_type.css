@@ -1,0 +1,190 @@
+/* ============================================================
+   APPRECIATORS — Colors & Type
+   Tokens lifted from https://www.appreciators.io/
+   ============================================================ */
+
+/* -- Fonts ----------------------------------------------------- */
+@font-face {
+  font-family: "Soria";
+  src: url("./fonts/Soria-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sora";
+  src: url("./fonts/Sora-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+/* Sora regular fallback via Google for body weights the site itself doesn't ship. */
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap");
+
+:root {
+  /* -------- Brand color palette ------------------------------- */
+  --app-navy:        #02085b;  /* primary ink / borders          */
+  --app-sky:         #0299d0;  /* the recognisable sky/cyan blue */
+  --app-yellow:      #ffc412;  /* highlight / fills              */
+  --app-magenta:     #d11e54;  /* hot pink "appreciate" accent   */
+  --app-green:       #64d32e;  /* lime — used sparingly          */
+  --app-cream:       #fffeff;  /* page background (off-white)    */
+  --app-black:       #000000;
+  --app-white:       #ffffff;
+
+  /* Tonal / supporting (oklch-harmonized) */
+  --app-navy-soft:   #0a1380;
+  --app-sky-soft:    #5fc1e3;
+  --app-yellow-soft: #ffe07a;
+  --app-magenta-soft:#e36488;
+  --app-grey-100:    #f3f4f6;
+  --app-grey-200:    #e5e7eb;
+  --app-grey-400:    #9ca3af;
+  --app-grey-600:    #6b7280;
+
+  /* -------- Semantic colors ----------------------------------- */
+  --fg-1: var(--app-navy);          /* primary text                */
+  --fg-2: #1a2270;                  /* secondary text              */
+  --fg-3: var(--app-grey-600);      /* muted / meta                */
+  --fg-inverse: var(--app-cream);   /* text on navy                */
+  --link: var(--app-sky);
+  --link-hover: var(--app-navy);
+
+  --bg-page:   var(--app-cream);
+  --bg-card:   var(--app-white);
+  --bg-navy:   var(--app-navy);
+  --bg-sky:    var(--app-sky);
+  --bg-yellow: var(--app-yellow);
+  --bg-magenta:var(--app-magenta);
+  --bg-green:  var(--app-green);
+
+  --border:        var(--app-navy);
+  --border-thick:  3px;        /* hand-drawn-feel chunky border   */
+  --border-medium: 2px;
+  --border-thin:   1px;
+
+  /* -------- Type families ------------------------------------- */
+  --font-display: "Soria", "DM Serif Display", "Times New Roman", serif;
+  --font-body:    "Sora", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+                  Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:    ui-monospace, "SF Mono", Menlo, Monaco, Consolas,
+                  "Liberation Mono", "Courier New", monospace;
+
+  /* -------- Type scale (matches site's tw tokens) ------------- */
+  --fs-xs:  0.75rem;   /* 12 */
+  --fs-sm:  0.875rem;  /* 14 */
+  --fs-base:1rem;      /* 16 */
+  --fs-lg:  1.125rem;  /* 18 */
+  --fs-xl:  1.25rem;   /* 20 */
+  --fs-2xl: 1.5rem;    /* 24 */
+  --fs-3xl: 1.875rem;  /* 30 */
+  --fs-4xl: 2.25rem;   /* 36 */
+  --fs-5xl: 3rem;      /* 48 */
+  --fs-6xl: 4rem;      /* 64 */
+  --fs-display: clamp(3rem, 8vw, 7.5rem);
+
+  /* -------- Radii --------------------------------------------- */
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  /* -------- Spacing (4-pt scale, mirrors tw) ------------------ */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+  --sp-20: 5rem;
+
+  /* -------- Shadows / chunky drop ----------------------------- */
+  /* Hard "sticker" shadow — no blur, navy offset, very Appreciators.*/
+  --shadow-sticker:        4px 4px 0 0 var(--app-navy);
+  --shadow-sticker-lg:     6px 6px 0 0 var(--app-navy);
+  --shadow-sticker-yellow: 4px 4px 0 0 var(--app-yellow);
+  --shadow-sticker-magenta:4px 4px 0 0 var(--app-magenta);
+  --shadow-soft:           0 10px 30px -10px rgba(2,8,91,.25);
+}
+
+/* ============================================================
+   Semantic typography classes
+   ============================================================ */
+
+html, body { background: var(--bg-page); color: var(--fg-1); }
+body { font-family: var(--font-body); font-weight: 500; line-height: 1.5; }
+
+.app-display, h1.app, .h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-display);
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: var(--fg-1);
+}
+.app-h2, h2.app, .h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
+  line-height: 1;
+  color: var(--fg-1);
+}
+.app-h3, h3.app, .h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-3xl);
+  line-height: 1.05;
+  color: var(--fg-1);
+}
+.app-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--app-magenta);
+}
+.app-label {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.app-body, p.app {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  color: var(--fg-1);
+}
+.app-caption {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.app-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--fg-1);
+}
+
+/* Headline word-stamp: a navy chunk inline that scales with the headline */
+.app-stamp {
+  display: inline-block;
+  background: var(--app-navy);
+  color: var(--app-cream);
+  padding: 0.05em 0.35em;
+  border-radius: 0.18em;
+  transform: rotate(-2deg);
+}
+.app-stamp--yellow { background: var(--app-yellow); color: var(--app-navy); }
+.app-stamp--sky    { background: var(--app-sky);    color: var(--app-cream); }
+.app-stamp--magenta{ background: var(--app-magenta);color: var(--app-cream); }

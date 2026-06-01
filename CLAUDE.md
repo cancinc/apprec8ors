@@ -3,26 +3,75 @@
 ## Live site & deploy
 - **URL:** https://knicknack.cv
 - **Cloudflare Pages project:** `apprec8ors`
-- **Deploy command:**
+- **Deploy folder:** `/Users/cnicnac/projects/apprec8ors/deploy`
+- **Deploy command** (run in your own terminal — wrangler requires interactive auth):
   ```bash
-  cd /Users/cnicnac/mcp-playground/apprec8ors/deploy && wrangler pages deploy . --project-name apprec8ors
+  wrangler pages deploy /Users/cnicnac/projects/apprec8ors/deploy --project-name apprec8ors
   ```
 
 ## File structure
 ```
 deploy/
-  index.html               ← single-page gallery (all UI, JS, CSS in one file)
+  index.html               ← landing page (navy/yellow brand, links to all tools)
+  gallery.html             ← main Appreciators NFT gallery (all 4 collections)
+  explorer.html            ← open NFT explorer (any wallet, any collection slug) ✓ LIVE
+  animated.html            ← The Appreciators animated GIF gallery
+  a-logo.png
+  colors_and_type.css      ← shared type/color tokens for landing page
+  assets/
+    gallery-1/             ← landing page marquee + collection card thumbnails
+    icons/                 ← nav icon PNGs (Info, Help, Link, User)
+  fonts/
+    Sora-ExtraBold.ttf
+    Soria-Bold.ttf
   functions/
     api/
-      nfts.js              ← Cloudflare Pages Function (server-side OpenSea proxy)
-  CLAUDE.md                ← this file
+      nfts.js              ← Cloudflare Pages Function (OpenSea proxy, Appreciators whitelist only)
+      explore.js           ← Cloudflare Pages Function (open proxy, any slug, auto-resolves chain)
 ```
+
+## Landing page — `index.html`
+Navy/yellow brand design (separate from the dark gallery theme). Sections:
+- **Nav** — links to Gallery, Animated, Explorer, Links; sticky top bar
+- **Hero** — headline + 3 CTAs: Open the gallery / See it animated / Explore any collection
+- **Marquee band** — scrolling strip of Appreciators thumbnails
+- **Collections grid** — 4 cards (Originals, The Appreciators, Potions, Companions), all linking to `gallery.html`
+- **Stats band** — 13,233+ NFTs · 3 chains · ~250 1/1s · 6,666 GIFs
+- **About block** — 4 feature points: Search any wallet / Built for screenshots / Animated mode / Explore any collection
+- **Footer** — Explorer link + external links (Appreciators.io, Twitter handles)
 
 ## How it works
 - `index.html` calls `/api/nfts?wallet=0x...&collection=<slug>` — no API key in the browser
 - `nfts.js` proxies to OpenSea API v2, reads `OPENSEA_API_KEY` from Cloudflare env secret
 - Default wallet: `0x50fc8d1d8dca2605c26a3a8274a5430132e2af13`
 - Visitors can search any wallet address to see their holdings from any collection
+
+## Open NFT Explorer — `explorer.html`
+
+### How it works
+- `explorer.html` calls `/api/explore?wallet=0x...&collection=<slug>` — same API key protection
+- `explore.js` has **no collection whitelist** — any valid OpenSea slug works
+- Chain is auto-resolved: first call to `GET /api/v2/collections/{slug}` extracts `contracts[0].chain`; result is cached in-process so subsequent paginates skip the lookup
+- `collection_meta` (`{ name, chain, address }`) is injected into the first-page response so the frontend gets the display name and contract without a separate API call
+
+### UI features
+- Enter any wallet → add any number of collection slugs via the builder input
+- Each collection is a removable pill: **loading** (pulse) → **loaded** (gold, count badge) → **error** (red, hover for message)
+- Click a pill name to **toggle visibility** (hide/show that collection's NFTs from the grid without re-fetching)
+- Grid, lightbox, sort, columns/gap sliders, bg/gap color pickers, Download Grid — all same as `index.html`
+- Collection badge shown on cards when multiple collections are active
+- Lightbox builds correct OpenSea item URL from `chain + contract + tokenId`
+- URL params: `?wallet=0x...&collections=slug1,slug2` — shareable links
+
+### Known UX friction
+- Requiring an exact slug is chunky — most users won't know `theappreciators-nft` off the top of their head
+- The slug input has no discovery mechanism; wrong slugs only fail after an API round-trip
+
+### Planned next: collection name search
+- Add a typeahead/autocomplete on the slug input that calls a new `/api/search-collections` endpoint
+- That endpoint calls `GET https://api.opensea.io/api/v2/collections?collection_type=non-fungible&name=<query>`
+- Show a small dropdown of matching collection names; selecting one fills in the slug automatically
+- The slug-only path stays — power users can still type a slug directly
 
 ## Collections
 All four Appreciators collections are supported. The proxy validates `collection` against this whitelist:
@@ -78,7 +127,7 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 - **ZIP download** — JSZip (cdnjs) to batch-download all wallet images as a single `.zip`; fetch each as blob, detect extension from Content-Type, name as `{collection}_{id}.{ext}`; warn if >100 items
 - **Rarity sort** — needs OpenRarity integration or pre-computed trait rarity lookup via `/api/traits` endpoint
 - **Landing page** at root linking to gallery (and future pages)
-- **Open collection explorer** — second page for any OpenSea collection, not just Appreciators
+- **Open collection explorer** — ✓ live at knicknack.cv/explorer.html; next: collection name typeahead (see Explorer section above)
 - **Analytics** — Cloudflare Pages Analytics or a lightweight pixel
 
 ## Animated Gallery — The Appreciators GIF page

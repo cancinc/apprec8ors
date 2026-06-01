@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Appreciators ✦ Animated</title>
+  <meta name="description" content="Animated GIF gallery for The Appreciators NFT collection">
+  <meta property="og:title" content="Appreciators ✦ Animated">
+
+  <link rel="stylesheet" href="colors_and_type.css">
+
+  <style>
+    :root {
+      /* ── Brand palette ───────────────────────────── */
+      --navy:        #02085b;
+      --navy-soft:   #0a1380;
+      --sky:         #0299d0;
+      --yellow:      #ffc412;
+      --yellow-soft: #ffe07a;
+      --magenta:     #d11e54;
+      --magenta-soft:#e36488;
+      --green:       #64d32e;
+      --cream:       #fffeff;
+      --white:       #ffffff;
+      --grey-100:    #f3f4f6;
+      --grey-200:    #e5e7eb;
+      --grey-400:    #9ca3af;
+      --grey-600:    #6b7280;
+
+      --bg:        var(--cream);
+      --gap-color: var(--cream);
+      --ink:       var(--navy);
+      --ink-dim:   var(--grey-600);
+      --ink-mute:  var(--grey-400);
+
+      /* Animation mode accent — magenta = the "appreciate" hot color */
+      --anim:      var(--magenta);
+      --anim-soft: var(--magenta-soft);
+
+      --sh:       4px 4px 0 0 var(--navy);
+      --sh-yel:   4px 4px 0 0 var(--yellow);
+      --sh-mag:   4px 4px 0 0 var(--magenta);
+      --sh-sky:   4px 4px 0 0 var(--sky);
+      --sh-lg:    6px 6px 0 0 var(--navy);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-weight: 500;
+      min-height: 100vh;
+      transition: background 0.2s;
+    }
+
+    /* ── Header ── */
+    .header { padding: 48px 28px 0; max-width: 1800px; margin: 0 auto; }
+    .header h1 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+    .header h1 em {
+      font-style: normal;
+      color: var(--navy);
+    }
+    .header h1 .anim-tag {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-style: normal;
+      background: var(--magenta);
+      color: var(--cream);
+      padding: 0.05em 0.3em;
+      border-radius: 0.18em;
+      transform: rotate(-2deg);
+      font-size: 0.72em;
+      margin-left: 0.18em;
+      vertical-align: middle;
+    }
+    .header-meta {
+      margin-top: 18px;
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      font-size: 0.85rem; color: var(--ink-dim);
+      font-weight: 600;
+    }
+    .header-meta .dot { color: var(--ink-mute); }
+    .header-meta a {
+      color: var(--navy);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 2px;
+      text-decoration-color: var(--sky);
+      font-weight: 700;
+      transition: color 0.15s;
+    }
+    .header-meta a:hover { color: var(--magenta); text-decoration-color: var(--magenta); }
+    #header-wallet {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--navy);
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      border-radius: 999px;
+      padding: 4px 12px;
+      cursor: default;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--navy); color: var(--cream);
+      border-radius: 999px; padding: 5px 14px;
+      font-size: 0.72rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: default;
+    }
+    .pill.chain { background: var(--sky); color: var(--cream); }
+    .pill.anim  { background: var(--magenta); color: var(--cream); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 3px solid var(--navy);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: transform 0.12s, box-shadow 0.12s;
+      white-space: nowrap;
+    }
+    .btn-gold {
+      background: var(--navy); color: var(--cream);
+      box-shadow: var(--sh-yel);
+    }
+    .btn-gold:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 0 var(--yellow);
+    }
+    .btn-ghost {
+      background: var(--cream); color: var(--navy);
+      box-shadow: none;
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--yellow);
+      box-shadow: 3px 3px 0 0 var(--navy);
+      transform: translate(-1px, -1px);
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+      padding: 28px 28px 0; max-width: 1800px; margin: 0 auto;
+    }
+    .toolbar-group { display: flex; align-items: center; gap: 8px; }
+    .toolbar-group label {
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 120px; height: 6px;
+      border-radius: 3px;
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--magenta); border: 2px solid var(--navy);
+      cursor: pointer; transition: transform 0.1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.18); }
+    .range-val {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--navy);
+      font-weight: 700;
+      min-width: 30px;
+      text-align: right;
+    }
+    select {
+      background: var(--cream);
+      color: var(--navy);
+      border: 2px solid var(--navy);
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-family: var(--font-body);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      outline: none; cursor: pointer;
+      transition: box-shadow 0.12s;
+    }
+    select:focus, select:hover {
+      box-shadow: 2px 2px 0 0 var(--navy);
+    }
+    .toolbar-sep {
+      width: 2px; height: 28px;
+      background: var(--navy);
+      opacity: 0.25;
+      border-radius: 1px;
+    }
+
+    /* Wallet search */
+    .wallet-group { display: flex; align-items: center; gap: 8px; }
+    .wallet-input {
+      background: var(--cream);
+      color: var(--navy);
+      border: 2px solid var(--navy);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      outline: none; width: 220px;
+      transition: box-shadow 0.12s, border-color 0.12s;
+    }
+    .wallet-input:focus { box-shadow: var(--sh-yel); }
+    .wallet-input.invalid { border-color: var(--magenta); color: var(--magenta); }
+
+    /* ── Status bar ── */
+    .status-bar {
+      padding: 22px 28px 0; max-width: 1800px; margin: 0 auto; min-height: 44px;
+    }
+    .status-line { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .status-msg {
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--ink-dim);
+    }
+    .status-msg.loading { color: var(--sky); }
+    .status-msg.error   { color: var(--magenta); }
+    .status-msg.success { color: var(--green); }
+    .nft-count {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cream);
+      padding: 4px 12px;
+      background: var(--navy);
+      border-radius: 999px;
+    }
+    .gif-count {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cream);
+      padding: 4px 12px;
+      background: var(--magenta);
+      border-radius: 999px;
+      display: none;
+    }
+    .progress-track {
+      height: 4px; background: var(--grey-200);
+      border: 2px solid var(--navy);
+      border-radius: 999px;
+      margin-top: 12px; overflow: hidden; display: none;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--magenta);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    /* ── Grid ── */
+    .grid-outer { padding: 20px 28px 140px; max-width: 1800px; margin: 0 auto; }
+    #nft-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 9), 1fr);
+      gap: var(--gap, 4px);
+      background: var(--gap-color);
+      padding: var(--gap, 4px);
+      border: 3px solid var(--navy);
+      border-radius: 14px;
+      box-shadow: var(--sh);
+      transition: background 0.2s;
+    }
+
+    .nft-card {
+      position: relative; aspect-ratio: 1;
+      background: var(--grey-100);
+      overflow: hidden; cursor: pointer;
+      border-radius: 4px;
+      transition: transform 0.18s cubic-bezier(.25,.8,.25,1), box-shadow 0.18s;
+    }
+    .nft-card:hover {
+      transform: scale(1.06);
+      z-index: 2;
+      box-shadow: 0 6px 0 0 var(--navy), 0 12px 24px rgba(2,8,91,0.25);
+    }
+
+    /* Animated mode glow */
+    .nft-card.gif-active {
+      box-shadow: 0 0 0 3px var(--magenta), 0 0 0 5px var(--navy);
+      z-index: 1;
+    }
+    .nft-card.gif-active:hover {
+      box-shadow: 0 0 0 3px var(--magenta), 0 0 0 5px var(--navy), 0 12px 24px rgba(209,30,84,0.35);
+    }
+
+    .nft-card img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      opacity: 0; transition: opacity 0.35s ease;
+    }
+    .nft-card img.vis { opacity: 1; }
+    /* GIF layer sits on top; hidden by default */
+    .nft-card img.gif-layer {
+      z-index: 2; opacity: 0; transition: opacity 0.25s ease;
+    }
+    .nft-card img.gif-layer.vis { opacity: 1; }
+
+    /* Per-card "A" toggle pill */
+    .card-a-btn {
+      position: absolute; top: 6px; right: 6px; z-index: 10;
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      color: var(--navy);
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, color 0.15s;
+      pointer-events: none;
+      line-height: 1.4;
+      letter-spacing: 0.04em;
+    }
+    .nft-card:hover .card-a-btn { opacity: 1; pointer-events: auto; }
+    .card-a-btn.on {
+      background: var(--magenta);
+      color: var(--cream);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Card overlay */
+    .card-overlay {
+      position: absolute; inset: 0; z-index: 5;
+      background: linear-gradient(to top, rgba(2,8,91,0.85) 0%, transparent 45%);
+      opacity: 0; transition: opacity 0.2s;
+      display: flex; align-items: flex-end; justify-content: center; padding: 8px;
+      pointer-events: none;
+    }
+    .nft-card:hover .card-overlay { opacity: 1; }
+    .card-label {
+      font-family: var(--font-body);
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--cream);
+      text-align: center; line-height: 1.3;
+    }
+    .nft-card.gif-active .card-label { color: var(--yellow); }
+
+    /* ── Loading skeleton ── */
+    .skeleton-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 9), 1fr);
+      gap: var(--gap, 4px);
+      padding: var(--gap, 4px);
+      border: 3px solid var(--navy);
+      border-radius: 14px;
+      background: var(--gap-color);
+    }
+    .skeleton-card {
+      aspect-ratio: 1; border-radius: 4px;
+      background: linear-gradient(90deg, var(--grey-100) 25%, var(--grey-200) 50%, var(--grey-100) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── Empty / error state ── */
+    .empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--ink-dim);
+      background: var(--cream);
+      border: 3px dashed var(--navy);
+      border-radius: 14px;
+    }
+    .empty h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: var(--navy);
+      margin-bottom: 10px;
+      line-height: 1;
+    }
+    .empty p {
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      font-weight: 500;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+      color: var(--ink-dim);
+    }
+
+    /* ── Floating "A" Button ── */
+    #global-a-btn {
+      position: fixed; bottom: 32px; right: 32px; z-index: 800;
+      width: 72px; height: 72px; border-radius: 50%;
+      border: 3px solid var(--navy);
+      background: var(--cream);
+      cursor: pointer; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--sh-yel);
+      transition: box-shadow 0.25s, transform 0.15s, background 0.25s;
+      animation: float-btn 2.5s ease-in-out infinite;
+    }
+    #global-a-btn:hover {
+      transform: scale(1.08);
+      animation-play-state: paused;
+      box-shadow: 6px 6px 0 0 var(--yellow);
+    }
+    #global-a-btn.active {
+      background: var(--magenta);
+      box-shadow: var(--sh-yel);
+      animation: float-btn-active 2.5s ease-in-out infinite;
+    }
+    #global-a-btn.active:hover {
+      box-shadow: 6px 6px 0 0 var(--yellow);
+    }
+    #global-a-btn img {
+      width: 44px; height: 44px; object-fit: contain;
+      transition: filter 0.25s;
+    }
+    #global-a-btn.active img {
+      filter: brightness(0) invert(1);
+    }
+    /* Fallback text if image fails */
+    #global-a-btn .a-fallback {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 700;
+      color: var(--navy);
+      line-height: 1; display: none;
+    }
+    #global-a-btn.active .a-fallback { color: var(--cream); }
+    #global-a-btn img.broken { display: none; }
+    #global-a-btn img.broken ~ .a-fallback { display: block; }
+
+    @keyframes float-btn {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+    @keyframes float-btn-active {
+      0%, 100% { transform: translateY(0) scale(1.05); }
+      50%       { transform: translateY(-8px) scale(1.05); }
+    }
+
+    /* Mode indicator pill near A button */
+    #mode-pill {
+      position: fixed; bottom: 50px; right: 120px; z-index: 800;
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      color: var(--navy);
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 999px;
+      pointer-events: none;
+      transition: background 0.25s, color 0.25s;
+      white-space: nowrap;
+      box-shadow: 2px 2px 0 0 var(--navy);
+    }
+    #mode-pill.active {
+      background: var(--magenta);
+      color: var(--cream);
+    }
+
+    /* ── Lightbox ── */
+    .lb-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(2, 8, 91, 0.78);
+      z-index: 900; display: none; align-items: center; justify-content: center;
+      padding: 24px; backdrop-filter: blur(6px);
+    }
+    .lb-backdrop.open { display: flex; animation: fadein 0.2s ease; }
+    @keyframes fadein { from { opacity:0; } to { opacity:1; } }
+
+    .lb-panel {
+      background: var(--cream);
+      border: 3px solid var(--navy);
+      border-radius: 18px;
+      max-width: 680px; width: 100%;
+      max-height: 90vh; overflow-y: auto; overflow-x: hidden;
+      position: relative;
+      box-shadow: var(--sh-lg);
+      animation: popIn 0.22s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from { transform: scale(0.92); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+    .lb-close {
+      position: absolute; top: 14px; right: 14px; z-index: 10;
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      color: var(--navy);
+      font-size: 0.95rem;
+      font-weight: 800;
+      width: 34px; height: 34px;
+      border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, transform 0.12s;
+    }
+    .lb-close:hover {
+      background: var(--magenta);
+      color: var(--cream);
+      transform: scale(1.08);
+    }
+
+    .lb-img-wrap {
+      position: relative; background: var(--navy);
+      border-radius: 14px 14px 0 0; overflow: hidden;
+      min-height: 200px;
+      border-bottom: 3px solid var(--navy);
+    }
+    #lb-img {
+      display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain;
+    }
+    /* GIF layer in lightbox */
+    #lb-gif {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+      opacity: 0; transition: opacity 0.3s ease; display: block;
+    }
+    #lb-gif.vis { opacity: 1; }
+
+    /* Lightbox image toggle button */
+    #lb-anim-btn {
+      position: absolute; bottom: 12px; right: 12px; z-index: 5;
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      color: var(--navy);
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: 2px 2px 0 0 var(--navy);
+      display: none;
+    }
+    #lb-anim-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 0 var(--navy);
+    }
+    #lb-anim-btn.on {
+      background: var(--magenta);
+      color: var(--cream);
+    }
+    #lb-anim-btn.loading { opacity: 0.6; cursor: wait; }
+
+    .lb-body { padding: 24px 26px 28px; }
+    .lb-title {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.05;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .lb-sub {
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-dim);
+      margin-bottom: 18px;
+    }
+    .lb-sub a {
+      color: var(--sky);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 2px;
+      font-weight: 800;
+    }
+    .lb-sub a:hover { color: var(--magenta); }
+
+    .lb-actions {
+      display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px;
+      align-items: center;
+    }
+    .lb-btn-save {
+      background: var(--navy);
+      color: var(--cream);
+      border: 3px solid var(--navy);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+      box-shadow: 3px 3px 0 0 var(--yellow);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .lb-btn-save:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 0 var(--yellow);
+    }
+    .lb-btn-save.gif-btn {
+      background: var(--magenta);
+      border-color: var(--navy);
+      box-shadow: 3px 3px 0 0 var(--navy);
+    }
+    .lb-btn-save.gif-btn:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 0 var(--navy);
+    }
+    .lb-btn-save:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+    .lb-btn-os {
+      margin-left: auto;
+      background: var(--cream);
+      color: var(--navy);
+      border: 2px solid var(--navy);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: box-shadow 0.12s, transform 0.12s;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .lb-btn-os:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 2px 2px 0 0 var(--navy);
+    }
+
+    .lb-traits { display: flex; flex-wrap: wrap; gap: 8px; }
+    .trait-chip {
+      background: var(--cream);
+      border: 2px solid var(--navy);
+      border-radius: 10px;
+      padding: 8px 12px;
+      line-height: 1.4;
+    }
+    .trait-chip .t-type {
+      font-family: var(--font-body);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .trait-chip .t-val {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    @media (max-width: 640px) {
+      .header, .toolbar, .status-bar, .grid-outer { padding-left: 16px; padding-right: 16px; }
+      .header { padding-top: 32px; }
+      #nft-grid, .skeleton-grid { --cols: 4 !important; }
+      .lb-panel { border-radius: 14px; }
+      .lb-body { padding: 20px 18px 24px; }
+      .toolbar { gap: 12px; }
+      .header-meta { gap: 8px; font-size: 0.78rem; }
+      .wallet-input { width: 160px; }
+      #global-a-btn { width: 60px; height: 60px; bottom: 20px; right: 20px; }
+      #global-a-btn img { width: 36px; height: 36px; }
+      #mode-pill { bottom: 38px; right: 90px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="header">
+  <h1>
+    Appreciators
+    <span class="anim-tag">✦ Animated</span>
+  </h1>
+  <div class="header-meta">
+    <span id="header-wallet" title="">—</span>
+    <span class="dot">·</span>
+    <span class="pill">The Appreciators</span>
+    <span class="pill chain">Ethereum</span>
+    <span class="pill anim">GIF</span>
+    <span class="dot">·</span>
+    <a href="gallery.html">← Gallery</a>
+    <span class="dot">·</span>
+    <a href="index.html">Home</a>
+  </div>
+</header>
+
+<!-- ── Toolbar ── -->
+<div class="toolbar">
+  <!-- Wallet search -->
+  <div class="toolbar-group wallet-group">
+    <input id="wallet-input" class="wallet-input" type="text"
+      placeholder="0x wallet address" autocomplete="off" spellcheck="false"
+      oninput="onWalletInput()" onkeydown="if(event.key==='Enter')searchWallet()" />
+    <button class="btn btn-gold" onclick="searchWallet()">Search</button>
+    <button id="reset-btn" class="btn btn-ghost" onclick="resetWallet()" style="display:none">Reset</button>
+  </div>
+
+  <div class="toolbar-sep"></div>
+
+  <!-- Columns -->
+  <div class="toolbar-group">
+    <label for="cols-range">Cols</label>
+    <input id="cols-range" type="range" min="2" max="20" value="9" oninput="onColsChange(this.value)">
+    <span id="cols-val" class="range-val">9</span>
+  </div>
+
+  <!-- Gap -->
+  <div class="toolbar-group">
+    <label for="gap-range">Gap</label>
+    <input id="gap-range" type="range" min="0" max="20" value="4" oninput="onGapChange(this.value)">
+    <span id="gap-val" class="range-val">4</span>
+  </div>
+
+  <!-- Sort -->
+  <div class="toolbar-group">
+    <label for="sort-sel">Sort</label>
+    <select id="sort-sel" onchange="onSortChange()">
+      <option value="id-asc">ID ↑</option>
+      <option value="id-desc">ID ↓</option>
+      <option value="random">Random</option>
+    </select>
+  </div>
+
+  <div class="toolbar-sep"></div>
+
+  <!-- Refresh -->
+  <button id="refresh-btn" class="btn btn-ghost" onclick="fetchAll()">⟳ Refresh</button>
+</div>
+
+<!-- ── Status bar ── -->
+<div class="status-bar">
+  <div class="status-line">
+    <span id="status-msg" class="status-msg"></span>
+    <span id="nft-count" class="nft-count" style="display:none"></span>
+    <span id="gif-count" class="gif-count"></span>
+  </div>
+  <div id="progress-track" class="progress-track">
+    <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- ── Grid ── -->
+<div class="grid-outer">
+  <div id="skeleton" class="skeleton-grid" style="display:none"></div>
+  <div id="nft-grid"></div>
+  <div id="empty-state" class="empty" style="display:none">
+    <h2>No NFTs found</h2>
+    <p>This wallet doesn't hold any Appreciators NFTs, or the collection couldn't be loaded.</p>
+  </div>
+</div>
+
+<!-- ── Floating "A" Button ── -->
+<button id="global-a-btn" title="Toggle animated GIFs" onclick="toggleGlobalMode()">
+  <img id="a-logo" src="a-logo.png" alt="A" onerror="this.classList.add('broken')" />
+  <span class="a-fallback">A</span>
+</button>
+<div id="mode-pill">Static</div>
+
+<!-- ── Lightbox ── -->
+<div id="lb-backdrop" class="lb-backdrop" onclick="onBackdropClick(event)">
+  <div class="lb-panel">
+    <button class="lb-close" onclick="closeLightbox()">✕</button>
+    <div class="lb-img-wrap">
+      <img id="lb-img" src="" alt="" />
+      <img id="lb-gif" src="" alt="" />
+      <button id="lb-anim-btn" onclick="toggleLbAnim()">▶ Animate</button>
+    </div>
+    <div class="lb-body">
+      <div id="lb-title" class="lb-title"></div>
+      <div id="lb-sub" class="lb-sub"></div>
+      <div class="lb-actions">
+        <button class="lb-btn-save" onclick="saveLbPng()">⬇ Save PNG</button>
+        <button id="lb-save-gif" class="lb-btn-save gif-btn" onclick="saveLbGif()" disabled>⬇ Save GIF</button>
+        <a id="lb-os-link" class="lb-btn-os" href="#" target="_blank" rel="noopener">OpenSea ↗</a>
+      </div>
+      <div id="lb-traits" class="lb-traits"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────
+const OWNER_WALLET  = '0x50fc8d1d8dca2605c26a3a8274a5430132e2af13';
+const COLLECTION    = 'theappreciators-nft';
+const OS_CONTRACT   = '0x71772beff1fb348eb7d5f9f1e0b5f11bc49ab5e4';
+const OS_CHAIN      = 'ethereum';
+const GIF_BASE      = 'https://gifs.knicknack.cv/';
+const WALLET_RE     = /^0x[0-9a-fA-F]{40}$/;
+
+// ── State ─────────────────────────────────────────────────────────
+let allNfts        = [];
+let sortedNfts     = [];
+let activeWallet   = OWNER_WALLET;
+let globalAnimMode = false;          // false = static, true = animated
+let currentLbNft   = null;
+let lbAnimShowing  = false;
+let lbGifLoaded    = false;
+let gifMissing     = new Set();      // token IDs confirmed 404
+let observer       = null;           // IntersectionObserver for lazy GIF loading
+let unloadObserver = null;           // IntersectionObserver for GIF memory eviction
+
+// ── Utils ─────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function status(msg, type = '') {
+  const el = $('status-msg');
+  el.textContent = msg;
+  el.className = 'status-msg' + (type ? ' ' + type : '');
+}
+
+function progress(pct) {
+  const track = $('progress-track');
+  track.style.display = 'block';
+  $('progress-fill').style.width = pct + '%';
+}
+function hideProgress() {
+  $('progress-track').style.display = 'none';
+  $('progress-fill').style.width = '0%';
+}
+
+function showSkeleton(cols) {
+  const sk = $('skeleton');
+  sk.style.setProperty('--cols', cols);
+  sk.style.setProperty('--gap', $('gap-range').value + 'px');
+  sk.innerHTML = Array(parseInt(cols) * 4).fill('<div class="skeleton-card"></div>').join('');
+  sk.style.display = 'grid';
+}
+function hideSkeleton() { $('skeleton').style.display = 'none'; }
+
+function gifUrl(id) {
+  return GIF_BASE + id + '.gif';
+}
+
+// ── Wallet ─────────────────────────────────────────────────────────
+function onWalletInput() {
+  const val = $('wallet-input').value.trim();
+  $('wallet-input').classList.toggle('invalid',
+    val.length > 0 && !WALLET_RE.test(val)
+  );
+}
+
+function searchWallet() {
+  const val = $('wallet-input').value.trim();
+  if (!val) { resetWallet(); return; }
+  if (!WALLET_RE.test(val)) {
+    $('wallet-input').classList.add('invalid');
+    status('Enter a valid Ethereum wallet address (0x… 42 hex chars).', 'error');
+    return;
+  }
+  activeWallet = val.toLowerCase();
+  updateHeaderWallet(activeWallet);
+  $('reset-btn').style.display = activeWallet === OWNER_WALLET ? 'none' : 'inline-flex';
+  fetchAll();
+}
+
+function resetWallet() {
+  activeWallet = OWNER_WALLET;
+  $('wallet-input').value = '';
+  $('wallet-input').classList.remove('invalid');
+  $('reset-btn').style.display = 'none';
+  updateHeaderWallet(OWNER_WALLET);
+  fetchAll();
+}
+
+function updateHeaderWallet(addr) {
+  const short = addr.slice(0, 6) + '…' + addr.slice(-5);
+  const el = $('header-wallet');
+  el.textContent = short;
+  el.title = addr;
+}
+
+// ── Fetch ─────────────────────────────────────────────────────────
+async function fetchAll() {
+  $('refresh-btn').disabled = true;
+  $('nft-grid').innerHTML = '';
+  $('nft-count').style.display = 'none';
+  $('gif-count').style.display = 'none';
+  $('empty-state').style.display = 'none';
+  allNfts = [];
+  sortedNfts = [];
+
+  if (observer) { observer.disconnect(); observer = null; }
+  if (unloadObserver) { unloadObserver.disconnect(); unloadObserver = null; }
+
+  status('Loading The Appreciators…', 'loading');
+  progress(10);
+  showSkeleton($('cols-range').value);
+
+  try {
+    let nextCursor = null;
+    let page = 0;
+    do {
+      let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallet)
+              + '&collection=' + encodeURIComponent(COLLECTION);
+      if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
+
+      const resp = await fetch(url);
+      if (resp.status === 429) throw new Error('Rate limit hit — try again in a moment.');
+      if (!resp.ok)            throw new Error('Fetch failed (' + resp.status + ').');
+
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+
+      const batch = data.nfts || [];
+      allNfts.push(...batch);
+      nextCursor = (batch.length > 0 && data.next) ? data.next : null;
+      page++;
+      progress(Math.min(85, 10 + page * 25));
+      if (nextCursor) await sleep(100);
+    } while (nextCursor);
+
+    progress(100);
+    await sleep(150);
+    hideProgress();
+    hideSkeleton();
+
+    if (allNfts.length === 0) {
+      $('empty-state').style.display = 'block';
+      status('No NFTs found for this wallet.', '');
+    } else {
+      applySort();
+      $('nft-count').textContent = allNfts.length + ' NFTs';
+      $('nft-count').style.display = 'inline';
+      status('', '');
+      updateGifCount();
+    }
+  } catch (err) {
+    hideProgress();
+    hideSkeleton();
+    status(err.message, 'error');
+  } finally {
+    $('refresh-btn').disabled = false;
+  }
+}
+
+function updateGifCount() {
+  const total = sortedNfts.length;
+  const missing = sortedNfts.filter(n => gifMissing.has(n.identifier)).length;
+  const avail = total - missing;
+  if (total > 0) {
+    $('gif-count').textContent = avail + '/' + total + ' GIFs';
+    $('gif-count').style.display = 'inline';
+  }
+}
+
+// ── Sort ──────────────────────────────────────────────────────────
+function onSortChange() {
+  savePrefs();
+  applySort();
+}
+
+function applySort() {
+  const sort = $('sort-sel').value;
+  const arr = [...allNfts];
+  if (sort === 'id-asc')   arr.sort((a,b) => +a.identifier - +b.identifier);
+  if (sort === 'id-desc')  arr.sort((a,b) => +b.identifier - +a.identifier);
+  if (sort === 'random')   arr.sort(() => Math.random() - 0.5);
+  sortedNfts = arr;
+  renderGrid();
+}
+
+// ── Grid rendering ─────────────────────────────────────────────────
+function onColsChange(v) {
+  $('cols-val').textContent = v;
+  document.getElementById('nft-grid').style.setProperty('--cols', v);
+  document.getElementById('skeleton').style.setProperty('--cols', v);
+  savePrefs();
+}
+
+function onGapChange(v) {
+  $('gap-val').textContent = v;
+  document.getElementById('nft-grid').style.setProperty('--gap', v + 'px');
+  document.getElementById('skeleton').style.setProperty('--gap', v + 'px');
+  savePrefs();
+}
+
+function renderGrid() {
+  if (observer) { observer.disconnect(); observer = null; }
+
+  const grid = $('nft-grid');
+  grid.innerHTML = '';
+
+  sortedNfts.forEach((nft, idx) => {
+    const id = nft.identifier;
+    const staticUrl = nft.display_image_url || nft.image_url || '';
+    const hasMissing = gifMissing.has(id);
+
+    const card = document.createElement('div');
+    card.className = 'nft-card' + (globalAnimMode && !hasMissing ? ' gif-active' : '');
+    card.dataset.idx = idx;
+    card.dataset.id = id;
+
+    // Static image
+    const img = document.createElement('img');
+    img.className = 'static-layer';
+    img.alt = '#' + id;
+    img.loading = 'lazy';
+
+    // GIF layer (lazy — src set by observer)
+    const gif = document.createElement('img');
+    gif.className = 'gif-layer';
+    gif.alt = '';
+    gif.dataset.gifSrc = gifUrl(id);
+
+    // Per-card "A" button
+    const aBtn = document.createElement('button');
+    aBtn.className = 'card-a-btn' + (globalAnimMode && !hasMissing ? ' on' : '');
+    aBtn.textContent = 'A';
+    aBtn.title = 'Toggle animation for this card';
+    aBtn.addEventListener('click', e => { e.stopPropagation(); toggleCardAnim(card, id); });
+
+    // Overlay label
+    const overlay = document.createElement('div');
+    overlay.className = 'card-overlay';
+    overlay.innerHTML = '<span class="card-label">#' + id + '</span>';
+
+    card.appendChild(img);
+    card.appendChild(gif);
+    card.appendChild(aBtn);
+    card.appendChild(overlay);
+
+    // Click → lightbox
+    card.addEventListener('click', () => openLightbox(nft));
+
+    grid.appendChild(card);
+
+    // Lazy load static image
+    if (staticUrl) {
+      img.onload = () => img.classList.add('vis');
+      img.onerror = () => {};
+      img.src = staticUrl;
+    }
+  });
+
+  // Set up IntersectionObserver for lazy GIF loading
+  setupGifObserver();
+
+  // If already in animated mode, show GIFs for any already-loaded GIF layers
+  if (globalAnimMode) {
+    triggerVisibleGifs();
+  }
+}
+
+// ── IntersectionObserver for GIF lazy loading + unloading ────────
+function setupGifObserver() {
+  if (observer) observer.disconnect();
+  if (unloadObserver) unloadObserver.disconnect();
+
+  // Load GIFs when card is within 100px of viewport
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const card = entry.target;
+      loadCardGif(card);
+      observer.unobserve(card);
+    });
+  }, { rootMargin: '100px' });
+
+  // Unload GIFs when card is more than 1200px outside the viewport
+  unloadObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) return;  // still near viewport, keep it
+      const card = entry.target;
+      evictCardGif(card);
+    });
+  }, { rootMargin: '1200px' });
+
+  if (globalAnimMode) {
+    document.querySelectorAll('.nft-card').forEach(card => {
+      observer.observe(card);
+      unloadObserver.observe(card);
+    });
+  }
+}
+
+function evictCardGif(card) {
+  const gifLayer = card.querySelector('.gif-layer');
+  if (!gifLayer || gifLayer.dataset.loaded !== 'ok') return;
+  if (card.dataset.cardAnim === '1') return;
+  gifLayer.classList.remove('vis');
+  gifLayer.src = '';
+  gifLayer.dataset.loaded = '';
+  card.classList.remove('gif-active');
+  observer.observe(card);
+}
+
+function loadCardGif(card) {
+  const gifLayer = card.querySelector('.gif-layer');
+  if (!gifLayer || gifLayer.dataset.loaded) return;
+
+  const id = card.dataset.id;
+  if (gifMissing.has(id)) return;
+
+  const src = gifLayer.dataset.gifSrc;
+  gifLayer.dataset.loaded = 'pending';
+
+  const tmp = new Image();
+  tmp.onload = () => {
+    gifLayer.src = src;
+    gifLayer.dataset.loaded = 'ok';
+    if (globalAnimMode || card.dataset.cardAnim === '1') {
+      showCardGif(card);
+    }
+  };
+  tmp.onerror = () => {
+    gifMissing.add(id);
+    gifLayer.dataset.loaded = 'missing';
+    card.classList.remove('gif-active');
+    card.querySelector('.card-a-btn')?.classList.remove('on');
+    updateGifCount();
+  };
+  tmp.src = src;
+}
+
+function showCardGif(card) {
+  const gifLayer = card.querySelector('.gif-layer');
+  if (gifLayer && gifLayer.dataset.loaded === 'ok') {
+    gifLayer.classList.add('vis');
+    card.classList.add('gif-active');
+  }
+}
+
+function hideCardGif(card) {
+  const gifLayer = card.querySelector('.gif-layer');
+  gifLayer?.classList.remove('vis');
+  card.classList.remove('gif-active');
+}
+
+// ── Global "A" toggle ─────────────────────────────────────────────
+function toggleGlobalMode() {
+  globalAnimMode = !globalAnimMode;
+
+  const btn = $('global-a-btn');
+  const pill = $('mode-pill');
+  btn.classList.toggle('active', globalAnimMode);
+  pill.classList.toggle('active', globalAnimMode);
+  pill.textContent = globalAnimMode ? 'Animated' : 'Static';
+
+  if (globalAnimMode) {
+    triggerVisibleGifs();
+    document.querySelectorAll('.nft-card').forEach(card => {
+      const id = card.dataset.id;
+      if (!gifMissing.has(id)) {
+        card.querySelector('.card-a-btn')?.classList.add('on');
+        const gifLayer = card.querySelector('.gif-layer');
+        if (gifLayer?.dataset.loaded === 'ok') {
+          showCardGif(card);
+        } else if (!gifLayer?.dataset.loaded) {
+          observer?.observe(card);
+        }
+        unloadObserver?.observe(card);
+      }
+    });
+  } else {
+    document.querySelectorAll('.nft-card').forEach(card => {
+      if (!card.dataset.cardAnim) {
+        hideCardGif(card);
+        card.querySelector('.card-a-btn')?.classList.remove('on');
+      }
+    });
+  }
+}
+
+function triggerVisibleGifs() {
+  document.querySelectorAll('.nft-card').forEach(card => {
+    const gifLayer = card.querySelector('.gif-layer');
+    if (!gifLayer?.dataset.loaded) {
+      observer?.observe(card);
+    }
+  });
+}
+
+// ── Per-card "A" toggle ───────────────────────────────────────────
+function toggleCardAnim(card, id) {
+  if (gifMissing.has(id)) return;
+
+  const isAnimating = card.dataset.cardAnim === '1';
+  const aBtn = card.querySelector('.card-a-btn');
+
+  if (isAnimating) {
+    card.dataset.cardAnim = '';
+    hideCardGif(card);
+    if (!globalAnimMode) aBtn?.classList.remove('on');
+  } else {
+    card.dataset.cardAnim = '1';
+    const gifLayer = card.querySelector('.gif-layer');
+    if (gifLayer?.dataset.loaded === 'ok') {
+      showCardGif(card);
+    } else if (!gifLayer?.dataset.loaded) {
+      loadCardGif(card);
+    }
+    aBtn?.classList.add('on');
+  }
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────
+function openLightbox(nft) {
+  currentLbNft = nft;
+  lbAnimShowing = false;
+  lbGifLoaded = false;
+
+  const id = nft.identifier;
+  const staticUrl = nft.display_image_url || nft.image_url || '';
+
+  const lbImg = $('lb-img');
+  lbImg.src = staticUrl;
+  lbImg.alt = 'Appreciators #' + id;
+
+  const lbGif = $('lb-gif');
+  lbGif.classList.remove('vis');
+  lbGif.src = '';
+  lbGif.onload = null;
+  lbGif.onerror = null;
+
+  const animBtn = $('lb-anim-btn');
+  if (gifMissing.has(id)) {
+    animBtn.style.display = 'none';
+  } else {
+    animBtn.style.display = 'block';
+    animBtn.textContent = '▶ Animate';
+    animBtn.className = '';
+  }
+
+  $('lb-title').textContent = 'Appreciators #' + id;
+  const osUrl = 'https://opensea.io/assets/' + OS_CHAIN + '/' + OS_CONTRACT + '/' + id;
+  $('lb-sub').innerHTML = '<a href="' + osUrl + '" target="_blank" rel="noopener">The Appreciators</a>'
+    + ' · <span style="color:var(--ink-mute)">Ethereum</span>';
+  $('lb-os-link').href = osUrl;
+
+  const saveGif = $('lb-save-gif');
+  saveGif.disabled = gifMissing.has(id);
+  saveGif.title = gifMissing.has(id) ? 'GIF not in library' : 'Download GIF';
+
+  const traitsEl = $('lb-traits');
+  const traits = nft.traits || [];
+  if (traits.length) {
+    traitsEl.innerHTML = traits.map(t =>
+      '<div class="trait-chip"><span class="t-type">' + esc(t.trait_type) + '</span>'
+      + '<span class="t-val">' + esc(String(t.value)) + '</span></div>'
+    ).join('');
+  } else {
+    traitsEl.innerHTML = '<span style="color:var(--ink-dim);font-size:0.85rem">No traits loaded</span>';
+  }
+
+  $('lb-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  if (globalAnimMode && !gifMissing.has(id)) {
+    loadLbGif(nft.identifier);
+  }
+}
+
+function closeLightbox() {
+  $('lb-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+  const lbGif = $('lb-gif');
+  lbGif.classList.remove('vis');
+  lbGif.src = '';
+  lbAnimShowing = false;
+  lbGifLoaded = false;
+  currentLbNft = null;
+}
+
+function onBackdropClick(e) {
+  if (e.target === $('lb-backdrop')) closeLightbox();
+}
+
+function toggleLbAnim() {
+  if (!currentLbNft) return;
+  const id = currentLbNft.identifier;
+  if (gifMissing.has(id)) return;
+
+  const animBtn = $('lb-anim-btn');
+
+  if (lbAnimShowing) {
+    $('lb-gif').classList.remove('vis');
+    lbAnimShowing = false;
+    animBtn.textContent = '▶ Animate';
+    animBtn.classList.remove('on');
+  } else {
+    if (lbGifLoaded) {
+      $('lb-gif').classList.add('vis');
+      lbAnimShowing = true;
+      animBtn.textContent = '⏸ Static';
+      animBtn.classList.add('on');
+    } else {
+      loadLbGif(id);
+    }
+  }
+}
+
+function loadLbGif(id) {
+  const animBtn = $('lb-anim-btn');
+  animBtn.textContent = '⏳ Loading…';
+  animBtn.classList.add('loading');
+
+  const lbGif = $('lb-gif');
+  const src = gifUrl(id);
+
+  lbGif.onload = () => {
+    lbGifLoaded = true;
+    lbGif.classList.add('vis');
+    lbAnimShowing = true;
+    animBtn.classList.remove('loading');
+    animBtn.textContent = '⏸ Static';
+    animBtn.classList.add('on');
+    $('lb-save-gif').disabled = false;
+  };
+  lbGif.onerror = () => {
+    gifMissing.add(id);
+    lbGif.src = '';
+    animBtn.style.display = 'none';
+    $('lb-save-gif').disabled = true;
+    updateGifCount();
+  };
+  lbGif.src = src;
+}
+
+// ── Save buttons ──────────────────────────────────────────────────
+async function saveLbPng() {
+  if (!currentLbNft) return;
+  const url = currentLbNft.display_image_url || currentLbNft.image_url;
+  if (!url) return;
+  try {
+    const resp = await fetch(url, { headers: { 'Accept': 'image/png,image/webp,image/*' } });
+    if (!resp.ok) throw new Error('Fetch failed');
+    const blob = await resp.blob();
+    if (blob.size < 512) throw new Error('Empty response');
+    const ct = resp.headers.get('Content-Type') || '';
+    const ext = ct.includes('avif') ? 'avif' : ct.includes('webp') ? 'webp' : 'png';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Appreciators-' + currentLbNft.identifier + '.' + ext;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch(e) {
+    alert('Could not save image: ' + e.message);
+  }
+}
+
+async function saveLbGif() {
+  if (!currentLbNft) return;
+  const id = currentLbNft.identifier;
+  const url = gifUrl(id);
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('GIF not available (' + resp.status + ')');
+    const blob = await resp.blob();
+    if (blob.size < 512) throw new Error('Empty GIF');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = id + '.gif';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch(e) {
+    gifMissing.add(id);
+    $('lb-save-gif').disabled = true;
+    alert('GIF not available: ' + e.message);
+  }
+}
+
+// ── Prefs persistence ─────────────────────────────────────────────
+function savePrefs() {
+  try {
+    localStorage.setItem('apprec8ors-anim-prefs', JSON.stringify({
+      cols: $('cols-range').value,
+      gap:  $('gap-range').value,
+      sort: $('sort-sel').value,
+    }));
+  } catch(e) {}
+}
+
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem('apprec8ors-anim-prefs') || '{}');
+    if (p.cols) {
+      $('cols-range').value = p.cols;
+      $('cols-val').textContent = p.cols;
+      $('nft-grid').style.setProperty('--cols', p.cols);
+    }
+    if (p.gap) {
+      $('gap-range').value = p.gap;
+      $('gap-val').textContent = p.gap;
+      $('nft-grid').style.setProperty('--gap', p.gap + 'px');
+    }
+    if (p.sort) $('sort-sel').value = p.sort;
+  } catch(e) {}
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// ── HTML escape util ──────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── Boot ──────────────────────────────────────────────────────────
+(function init() {
+  loadPrefs();
+  updateHeaderWallet(OWNER_WALLET);
+  fetchAll();
+})();
+</script>
+</body>
+</html>

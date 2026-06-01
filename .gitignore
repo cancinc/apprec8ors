@@ -2,14 +2,25 @@
 *
 !.gitignore
 
+# Secrets — never commit
+.env
+.dev.vars
+
 # Include HTML files
 !*.html
 
 # Include documentation
 !CLAUDE.md
 
-# Include serverless function and UI assets
+# Include root-level serverless functions and assets
 !functions/
 !functions/api/
 !functions/api/nfts.js
+!functions/api/explore.js
 !a-logo.png
+
+# Include deploy/ — production folder
+# .wrangler/ is re-ignored below after the broad un-ignore
+!deploy/
+!deploy/**
+deploy/.wrangler/
