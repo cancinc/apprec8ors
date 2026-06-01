@@ -26,8 +26,9 @@ deploy/
     Soria-Bold.ttf
   functions/
     api/
-      nfts.js              ← Cloudflare Pages Function (OpenSea proxy, Appreciators whitelist only)
-      explore.js           ← Cloudflare Pages Function (open proxy, any slug, auto-resolves chain)
+      nfts.js                  ← OpenSea proxy, Appreciators whitelist only
+      explore.js               ← open proxy, any slug, auto-resolves chain
+      wallet-collections.js    ← returns unique collection slugs held by a wallet (ETH/APE/BASE)
 ```
 
 ## Landing page — `index.html`
@@ -40,11 +41,12 @@ Navy/yellow brand design (separate from the dark gallery theme). Sections:
 - **About block** — 4 feature points: Search any wallet / Built for screenshots / Animated mode / Explore any collection
 - **Footer** — Explorer link + external links (Appreciators.io, Twitter handles)
 
-## How it works
-- `index.html` calls `/api/nfts?wallet=0x...&collection=<slug>` — no API key in the browser
+## How it works — gallery.html
+- `gallery.html` calls `/api/nfts?wallet=0x...&collection=<slug>` — no API key in the browser
 - `nfts.js` proxies to OpenSea API v2, reads `OPENSEA_API_KEY` from Cloudflare env secret
 - Default wallet: `0x50fc8d1d8dca2605c26a3a8274a5430132e2af13`
-- Visitors can search any wallet address to see their holdings from any collection
+- Visitors can search any wallet address to see their holdings from any Appreciators collection
+- Note: root-level `index.html` in the repo is an older dev version of the gallery; the production gallery is `deploy/gallery.html`
 
 ## Open NFT Explorer — `explorer.html`
 
@@ -55,23 +57,28 @@ Navy/yellow brand design (separate from the dark gallery theme). Sections:
 - `collection_meta` (`{ name, chain, address }`) is injected into the first-page response so the frontend gets the display name and contract without a separate API call
 
 ### UI features
-- Enter any wallet → add any number of collection slugs via the builder input
+- Enter any wallet → add collection slugs manually via text input or via **Browse wallet ▾** dropdown
+- **Browse wallet dropdown** — on click, calls `/api/wallet-collections` to scan ETH/APE/BASE chains; shows a multi-select list with prettified name, raw slug, and chain badge; "Add selected" adds all checked collections at once; already-added collections are dimmed
 - Each collection is a removable pill: **loading** (pulse) → **loaded** (gold, count badge) → **error** (red, hover for message)
-- Click a pill name to **toggle visibility** (hide/show that collection's NFTs from the grid without re-fetching)
-- Grid, lightbox, sort, columns/gap sliders, bg/gap color pickers, Download Grid — all same as `index.html`
+- Click a pill name to **toggle visibility** (hide/show that collection's NFTs without re-fetching)
+- **Trait sort** — after collections load, a "By trait" optgroup appears in the sort dropdown with one entry per unique trait type found across all loaded NFTs; sorts alphabetically by value, NFTs missing the trait go to the end
+- Grid, lightbox, sort, columns/gap sliders, bg/gap color pickers, Download Grid, Save Image
 - Collection badge shown on cards when multiple collections are active
 - Lightbox builds correct OpenSea item URL from `chain + contract + tokenId`
 - URL params: `?wallet=0x...&collections=slug1,slug2` — shareable links
+- Slugs persist to localStorage and restore as pending pills on next visit
 
-### Known UX friction
-- Requiring an exact slug is chunky — most users won't know `theappreciators-nft` off the top of their head
-- The slug input has no discovery mechanism; wrong slugs only fail after an API round-trip
+### wallet-collections.js — `/api/wallet-collections`
+- Accepts `wallet` param; queries Ethereum, ApeChain, Base in parallel (`limit=200` per chain)
+- Returns `{ collections: [{ slug, chain }] }` sorted alphabetically
+- Individual chain failures are silently tolerated (partial results still returned)
+- Cached for 2 minutes at the CDN level
 
 ### Planned next: collection name search
-- Add a typeahead/autocomplete on the slug input that calls a new `/api/search-collections` endpoint
-- That endpoint calls `GET https://api.opensea.io/api/v2/collections?collection_type=non-fungible&name=<query>`
-- Show a small dropdown of matching collection names; selecting one fills in the slug automatically
-- The slug-only path stays — power users can still type a slug directly
+- Add typeahead on the slug input calling a `/api/search-collections` endpoint
+- That endpoint calls `GET /api/v2/collections?collection_type=non-fungible&name=<query>`
+- Dropdown shows matching names; selecting fills the slug field
+- Browse wallet covers the primary discovery use case; name search handles "I know the collection but not the slug"
 
 ## Collections
 All four Appreciators collections are supported. The proxy validates `collection` against this whitelist:
@@ -85,7 +92,7 @@ All four Appreciators collections are supported. The proxy validates `collection
 
 OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 
-## Features (current)
+## Features (current) — gallery.html
 - **Collection picker** — pill buttons: All ✦ / Originals / The Appreciators / Potions / Companions
 - **All Collections mode** — fetches all 4 collections sequentially (rate-limit safe), tags each NFT with `_collection`, shows collection badge on cards and in lightbox
 - **Wallet search** — any 0x address; resets to default owner
@@ -93,7 +100,7 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 - **Column + gap sliders** — 2–20 columns
 - **Gold border treatment** — Originals 1/1 tokens (trait `"1-1": "True"`)
 - **Lightbox** — full image, traits, OpenSea link (correct chain/contract per collection)
-- **Save Image button** (lightbox) — `fetch()`es with `Accept: image/png` to avoid AVIF/PNG mismatch, detects true format from `Content-Type`, saves with correct extension (`.png`, `.avif`, etc.)
+- **Save Image button** (lightbox) — fetches image, converts to PNG via canvas before saving; GIF and MP4 saved in native format
 - **Video support** — Potions are MP4; cards use `<video autoplay muted loop>`, lightbox toggles between `<img>` and `<video>`
 - **Download Grid** — canvas export at 300px/cell; saves as `apprec8ors_{collection}_{cols}col.png`
 - **Shimmer skeleton** loading state
@@ -107,10 +114,12 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 - `URL.revokeObjectURL` is deferred 10 seconds after download trigger to avoid race condition
 - `blob.size < 512` check catches silent canvas-taint failures (tainted canvas returns near-empty blob, not null)
 
-### OpenSea image format
-- `i2c.seadn.io` does HTTP content negotiation — URLs end in `.png` but the CDN serves AVIF when the browser sends `Accept: image/avif`
-- The Save Image button in the lightbox sends `Accept: image/png,image/webp,image/*` to request PNG, then reads actual `Content-Type` from response to label the file correctly
-- For card `<img>` display, browser AVIF rendering works fine; the format issue only affects file saves
+### OpenSea image format & Save Image
+- `i2c.seadn.io` does HTTP content negotiation — URLs end in `.png` but the CDN overrides the `Accept` header and returns AVIF regardless
+- **Save Image uses canvas conversion:** fetch the blob, load into `new Image()` via a blob URL (no CORS issue — blob URLs are same-origin), draw to a temporary canvas, export as `image/png` via `canvas.toBlob()`. This guarantees PNG output regardless of what the CDN returns
+- GIF and MP4 are saved in their native format (canvas conversion of video/animation would lose frames)
+- `blobToPng()` helper is defined in each gallery file alongside `loadImg()` / `loadVideoFrame()`
+- For card `<img>` display, browser AVIF rendering works fine — the conversion only applies on save
 
 ### Rate limiting
 - `nfts.js` in-memory rate limiter: 40 requests/IP/minute (raised from 20 to accommodate All Collections mode firing 4 requests per page load)
@@ -123,11 +132,10 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 - Video from `raw2.seadn.io` may not have permissive CORS — canvas cells may render as dark placeholders
 
 ## Ideas on deck
-- **Filter by traits** — dropdown or pill filters built from the trait types/values present in the loaded NFTs (e.g. Background: Blue, 1-1: True); filter state applied on top of sort before `renderGrid()`; trait options derived dynamically from `allNfts` so it works across all collections
-- **ZIP download** — JSZip (cdnjs) to batch-download all wallet images as a single `.zip`; fetch each as blob, detect extension from Content-Type, name as `{collection}_{id}.{ext}`; warn if >100 items
+- **Filter by traits** — dropdown or pill filters built from trait types/values in loaded NFTs; filter state applied on top of sort before `renderGrid()`; trait options derived dynamically so it works across all collections (gallery.html doesn't have this yet; explorer.html has trait *sort* but not *filter*)
+- **Collection name typeahead** — search by name instead of slug in explorer.html; calls `GET /api/v2/collections?name=<query>`; see Explorer section above
+- **ZIP download** — JSZip (cdnjs) to batch-download all wallet images as a single `.zip`; fetch each as blob via `blobToPng()`, name as `{collection}_{id}.png`; warn if >100 items
 - **Rarity sort** — needs OpenRarity integration or pre-computed trait rarity lookup via `/api/traits` endpoint
-- **Landing page** at root linking to gallery (and future pages)
-- **Open collection explorer** — ✓ live at knicknack.cv/explorer.html; next: collection name typeahead (see Explorer section above)
 - **Analytics** — Cloudflare Pages Analytics or a lightweight pixel
 
 ## Animated Gallery — The Appreciators GIF page
