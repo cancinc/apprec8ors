@@ -27,8 +27,10 @@ deploy/
   functions/
     api/
       nfts.js                  ← OpenSea proxy, Appreciators whitelist only
-      explore.js               ← open proxy, any slug, auto-resolves chain
-      wallet-collections.js    ← returns unique collection slugs held by a wallet (ETH/APE/BASE)
+      explore.js               ← open proxy, any slug, auto-resolves chain; caches collection metadata in Cloudflare Cache API (1hr TTL across instances)
+      wallet-collections.js    ← returns unique collection slugs + real names held by a wallet (ETH/APE/BASE); paginates up to 400 NFTs/chain; batch-resolves names via POST /api/v2/collections/batch
+scripts/
+  compute-originals-rarity.js  ← one-time script: fetches all Originals tokens, computes IC scores, writes rarity-originals.json
 ```
 
 ## Landing page — `index.html`
@@ -53,12 +55,12 @@ Navy/yellow brand design (separate from the dark gallery theme). Sections:
 ### How it works
 - `explorer.html` calls `/api/explore?wallet=0x...&collection=<slug>` — same API key protection
 - `explore.js` has **no collection whitelist** — any valid OpenSea slug works
-- Chain is auto-resolved: first call to `GET /api/v2/collections/{slug}` extracts `contracts[0].chain`; result is cached in-process so subsequent paginates skip the lookup
+- Chain is auto-resolved: first call to `GET /api/v2/collections/{slug}` extracts `contracts[0].chain`; result is cached in both in-process Map and Cloudflare Cache API (1hr, cross-instance)
 - `collection_meta` (`{ name, chain, address }`) is injected into the first-page response so the frontend gets the display name and contract without a separate API call
 
 ### UI features
 - Enter any wallet → add collection slugs manually via text input or via **Browse wallet ▾** dropdown
-- **Browse wallet dropdown** — on click, calls `/api/wallet-collections` to scan ETH/APE/BASE chains; shows a multi-select list with prettified name, raw slug, and chain badge; "Add selected" adds all checked collections at once; already-added collections are dimmed
+- **Browse wallet dropdown** — on click, calls `/api/wallet-collections` to scan ETH/APE/BASE chains; shows a multi-select list with real collection name (from batch API), raw slug, and chain badge; "Add selected" adds all checked collections at once; already-added collections are dimmed
 - Each collection is a removable pill: **loading** (pulse) → **loaded** (gold, count badge) → **error** (red, hover for message)
 - Click a pill name to **toggle visibility** (hide/show that collection's NFTs without re-fetching)
 - **Trait sort** — after collections load, a "By trait" optgroup appears in the sort dropdown with one entry per unique trait type found across all loaded NFTs; sorts alphabetically by value, NFTs missing the trait go to the end
@@ -69,11 +71,11 @@ Navy/yellow brand design (separate from the dark gallery theme). Sections:
 - Slugs persist to localStorage and restore as pending pills on next visit
 
 ### wallet-collections.js — `/api/wallet-collections`
-- Accepts `wallet` param; queries Ethereum, ApeChain, Base in parallel (`limit=200` per chain)
-- Returns `{ collections: [{ slug, chain }] }` sorted alphabetically
+- Accepts `wallet` param; queries Ethereum, ApeChain, Base in parallel (up to 2 pages / 400 NFTs per chain)
+- Returns `{ collections: [{ slug, chain, name }] }` sorted alphabetically
+- Real collection names resolved via `POST /api/v2/collections/batch` in one call; falls back to null if batch fails
 - Individual chain failures are silently tolerated (partial results still returned)
 - Cached for 2 minutes at the CDN level
-- Optimization available: `POST /api/v2/collections/batch` (array of slugs) can resolve display names for multiple collections in one call instead of individual lookups
 
 ### Planned next: collection name search
 - Add typeahead on the slug input calling a `/api/search-collections` endpoint
@@ -136,8 +138,40 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 - **Filter by traits** — dropdown or pill filters built from trait types/values in loaded NFTs; filter state applied on top of sort before `renderGrid()`; trait options derived dynamically so it works across all collections (gallery.html doesn't have this yet; explorer.html has trait *sort* but not *filter*); can use `GET /api/v2/traits/{slug}` to get all trait categories + value counts without paging through all NFTs
 - **Collection name typeahead** — search by name instead of slug in explorer.html; calls `GET /api/v2/search?query=<query>&asset_types=collection&limit=50`; see Explorer section above
 - **ZIP download** — JSZip (cdnjs) to batch-download all wallet images as a single `.zip`; fetch each as blob via `blobToPng()`, name as `{collection}_{id}.png`; warn if >100 items
-- **Rarity sort** — needs OpenRarity integration or pre-computed trait rarity lookup via `/api/traits` endpoint
+- **Rarity sort** — attempted and reverted; see notes below before retrying
 - **Analytics** — Cloudflare Pages Analytics or a lightweight pixel
+
+## Rarity ranking — research notes (not yet shipped)
+
+### OpenSea traits API — critical format detail
+`GET /api/v2/traits/{slug}` returns:
+```json
+{ "categories": { "Background": "string", ... }, "counts": { "Background": { "Frostbite": 248, "Peach": 737, ... } } }
+```
+**Use `data.counts` for the value→count map. `data.categories` is just data-type metadata ("string"), not counts.**
+
+### Algorithm
+IC scoring (OpenRarity-compatible) is implemented in `scripts/compute-originals-rarity.js`:
+- Per-value probability: `p = count / totalSupply`
+- IC per trait: `-Math.log2(p)`
+- Null trait: tokens missing a category get IC from `nullCount = totalSupply - Σ(category counts)`
+- Trait count pseudo-category: adds IC based on how rare the token's total trait count is
+- Dense ranking: tied scores share a rank; next rank increments by 1
+
+### Key findings for Originals
+- total_supply: 5858; 5587 tokens have traits loaded (271 have no metadata)
+- Background trait counts sum to 5573 (not 5858) — some tokens genuinely have no Background
+- The 14 named 1/1 tokens land at **rank ~70** mathematically, not rank #1
+  - OpenSea displays them as rank #1 in their UI — this is likely a manual override, not what the IC math produces
+  - 69 other tokens have rarer trait combinations (token 4122 is the rarest by IC score)
+  - Decide whether to accept rank 70 for 1/1s or add a post-processing override before shipping
+
+### Architecture (what to rebuild)
+- `deploy/functions/api/traits.js` — proxy for `GET /api/v2/traits/{slug}` + `total_supply` from collections endpoint; whitelist only; 1hr cache
+- `deploy/rarity.js` — `computeRarity(nfts, traitCategories, totalSupply)` → `Map<tokenId, { score, rank, percentile }>` using `traitCategories.counts`
+- `deploy/rarity-originals.json` — pre-computed ranks for all 5587 scored Originals tokens; generated by `scripts/compute-originals-rarity.js`; format: `{ "tokenId": rank }`
+- `gallery.html` loads `rarity-originals.json` directly (static, fast); falls back to live `/api/traits` computation for other collections
+- Rarity sort option hidden until data loads; rank badge on cards (top-right, magenta); rank + percentile in lightbox
 
 ## Animated Gallery — The Appreciators GIF page
 
