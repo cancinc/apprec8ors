@@ -933,7 +933,7 @@ const WALLET_RE    = /^0x[0-9a-fA-F]{40}$/;
 
 let allNfts          = [];
 let view             = [];
-let activeWallet     = OWNER_WALLET;
+let activeWallets    = [];
 let activeCollection = 'appreciators-originals';
 let currentLbNft     = null;
 let activeCompanions = new Set();
@@ -1054,40 +1054,70 @@ function showSkeleton(cols) {
 }
 function hideSkeleton() { $('skeleton').style.display = 'none'; }
 
-// ── Wallet search ────────────────────────────────────────────────
+// ── Wallet management ─────────────────────────────────────────────
 function onWalletInput() {
   const val = $('wallet-input').value.trim();
   $('wallet-input').classList.toggle('invalid', val.length > 0 && val.length === 42 && !WALLET_RE.test(val));
 }
 
-function searchWallet() {
-  const val = $('wallet-input').value.trim();
-  if (!val) { resetWallet(); return; }
-  if (!WALLET_RE.test(val)) {
+function addWallet() {
+  const addr = $('wallet-input').value.trim().toLowerCase();
+  if (!addr) return;
+  if (!WALLET_RE.test(addr)) {
     $('wallet-input').classList.add('invalid');
     status('Enter a valid Ethereum wallet address (0x…42 hex chars).', 'error');
     return;
   }
-  activeWallet = val.toLowerCase();
-  updateHeaderWallet(activeWallet);
-  $('reset-btn').style.display = activeWallet === OWNER_WALLET ? 'none' : 'inline';
+  if (activeWallets.includes(addr)) {
+    $('wallet-input').value = '';
+    return;
+  }
+  activeWallets.push(addr);
+  $('wallet-input').value = '';
+  $('wallet-input').classList.remove('invalid');
+  renderWalletPills();
+  updateHeaderWallet();
+  fetchAll();
+}
+
+function removeWallet(addr) {
+  activeWallets = activeWallets.filter(w => w !== addr);
+  renderWalletPills();
+  updateHeaderWallet();
   fetchAll();
 }
 
 function resetWallet() {
-  activeWallet = OWNER_WALLET;
+  activeWallets = [OWNER_WALLET];
   $('wallet-input').value = '';
   $('wallet-input').classList.remove('invalid');
-  $('reset-btn').style.display = 'none';
-  updateHeaderWallet(OWNER_WALLET);
+  renderWalletPills();
+  updateHeaderWallet();
   fetchAll();
 }
 
-function updateHeaderWallet(addr) {
-  const short = addr.slice(0, 6) + '…' + addr.slice(-5);
+function renderWalletPills() {
+  $('wallet-pills').innerHTML = activeWallets.map(addr => {
+    const short = addr.slice(0, 6) + '…' + addr.slice(-5);
+    return '<span class="wallet-pill">' + short
+      + '<button type="button" class="wallet-pill-x" onclick="removeWallet(\'' + addr + '\')" title="Remove">×</button>'
+      + '</span>';
+  }).join('');
+}
+
+function updateHeaderWallet() {
   const el = $('header-wallet');
-  el.textContent = short;
-  el.title = addr;
+  if (activeWallets.length === 0) {
+    el.textContent = '—';
+    el.title = '';
+  } else if (activeWallets.length === 1) {
+    const addr = activeWallets[0];
+    el.textContent = addr.slice(0, 6) + '…' + addr.slice(-5);
+    el.title = addr;
+  } else {
+    el.textContent = activeWallets.length + ' wallets';
+    el.title = activeWallets.join(', ');
+  }
 }
 
 // ── Core fetch: single collection page-loop ───────────────────────
@@ -1496,7 +1526,9 @@ function $(id){return document.getElementById(id);}
   loadPrefs();
   updateHeaderCollection();
   showCompanionFilter(activeCollection === 'appreciators-originals');
-  updateHeaderWallet(OWNER_WALLET);
+  activeWallets = [OWNER_WALLET];
+  renderWalletPills();
+  updateHeaderWallet();
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
   $('lb-backdrop').addEventListener('click',e=>{if(e.target===$('lb-backdrop'))closeLightbox();});
   document.addEventListener('click', e => {
