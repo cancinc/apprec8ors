@@ -1526,8 +1526,6 @@ function $(id){return document.getElementById(id);}
   loadPrefs();
   updateHeaderCollection();
   showCompanionFilter(activeCollection === 'appreciators-originals');
-  activeWallets = [OWNER_WALLET];
-  renderWalletPills();
   updateHeaderWallet();
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
   $('lb-backdrop').addEventListener('click',e=>{if(e.target===$('lb-backdrop'))closeLightbox();});
