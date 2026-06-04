@@ -881,7 +881,7 @@ function addCollection(slugOverride) {
 
   if (collections[slug]) {
     // Already exists — re-fetch if errored
-    if (collections[slug].status === 'error' && activeWallet) {
+    if (collections[slug].status === 'error' && activeWallets.length > 0) {
       fetchCollection(slug);
     }
     return;
@@ -893,7 +893,7 @@ function addCollection(slugOverride) {
   savePrefs();
   updatePageState();
 
-  if (activeWallet) {
+  if (activeWallets.length > 0) {
     fetchCollection(slug);
   } else {
     setStatus('Add a wallet address above, then collections will load.', '');
@@ -918,7 +918,7 @@ function removeCollection(slug) {
 }
 
 function refetchAll() {
-  if (!activeWallet || collectionOrder.length === 0) return;
+  if (activeWallets.length === 0 || collectionOrder.length === 0) return;
   $('refresh-btn').disabled = true;
   for (const slug of collectionOrder) {
     fetchCollection(slug);
@@ -952,17 +952,22 @@ function toggleBrowse() {
 }
 
 async function loadBrowseCollections() {
-  if (!activeWallet) return;
+  if (activeWallets.length === 0) return;
   browse.loading = true;
   $('browse-list').innerHTML = '<div class="browse-loading">Scanning Ethereum, ApeChain, Base…</div>';
 
   try {
-    const resp = await fetch('/api/wallet-collections?wallet=' + encodeURIComponent(activeWallet));
-    if (!resp.ok) throw new Error('scan failed');
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error);
-
-    browse.results = data.collections || [];
+    const seen = new Map();
+    for (const wallet of activeWallets) {
+      const resp = await fetch('/api/wallet-collections?wallet=' + encodeURIComponent(wallet));
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      if (data.error) continue;
+      for (const col of (data.collections || [])) {
+        if (!seen.has(col.slug)) seen.set(col.slug, col);
+      }
+    }
+    browse.results = [...seen.values()];
     browse.loaded  = true;
     renderBrowseList();
   } catch {
@@ -1030,7 +1035,7 @@ function addBrowseSelected() {
 
 // ── Fetch ─────────────────────────────────────────────────────────
 async function fetchCollection(slug) {
-  if (!activeWallet) return;
+  if (activeWallets.length === 0) return;
   const c = collections[slug];
   if (!c) return;
 
@@ -1044,51 +1049,62 @@ async function fetchCollection(slug) {
   showSkeletonIfEmpty();
 
   try {
-    const nfts = [];
-    let cursor = null;
+    const allNfts = [];
+    let metaCaptured = false;
 
-    do {
-      if (collections[slug]?.fetchSeq !== mySeq) return; // superseded
+    for (let wi = 0; wi < activeWallets.length; wi++) {
+      if (collections[slug]?.fetchSeq !== mySeq) return; // superseded between wallets
 
-      let url = '/api/explore?wallet=' + encodeURIComponent(activeWallet)
-              + '&collection=' + encodeURIComponent(slug);
-      if (cursor) url += '&next=' + encodeURIComponent(cursor);
+      const wallet = activeWallets[wi];
+      let cursor = null;
 
-      const resp = await fetch(url);
-      if (collections[slug]?.fetchSeq !== mySeq) return;
+      do {
+        if (collections[slug]?.fetchSeq !== mySeq) return; // superseded
 
-      if (resp.status === 429) throw new Error('Rate limit hit — wait a moment and refresh.');
-      if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        throw new Error(body.error || 'Failed to load collection (' + resp.status + ').');
-      }
+        let url = '/api/explore?wallet=' + encodeURIComponent(wallet)
+                + '&collection=' + encodeURIComponent(slug);
+        if (cursor) url += '&next=' + encodeURIComponent(cursor);
 
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error);
+        const resp = await fetch(url);
+        if (collections[slug]?.fetchSeq !== mySeq) return;
 
-      // Capture collection name + chain from first-page metadata
-      if (!cursor && data.collection_meta) {
-        const m = data.collection_meta;
-        c.label    = m.name    || slug;
-        c.chain    = m.chain   || null;
-        c.contract = m.address || null;
-      }
+        if (resp.status === 429) throw new Error('Rate limit hit — wait a moment and refresh.');
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          throw new Error(body.error || 'Failed to load collection (' + resp.status + ').');
+        }
 
-      const batch = (data.nfts || []).map(n => ({ ...n, _collection: slug }));
-      nfts.push(...batch);
-      cursor = (batch.length > 0 && data.next) ? data.next : null;
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
 
-      // Incremental render while paginating
-      if (collections[slug]?.fetchSeq === mySeq) {
-        c.nfts = [...nfts];
-        renderTags();
-        rebuildAndSortDebounced();
-      }
-    } while (cursor);
+        // Capture collection name + chain from first page of first wallet only
+        if (!metaCaptured && !cursor && data.collection_meta) {
+          const m = data.collection_meta;
+          c.label    = m.name    || slug;
+          c.chain    = m.chain   || null;
+          c.contract = m.address || null;
+          metaCaptured = true;
+        }
+
+        const batch = (data.nfts || []).map(n => ({ ...n, _collection: slug }));
+        allNfts.push(...batch);
+        cursor = (batch.length > 0 && data.next) ? data.next : null;
+
+        // Incremental render while paginating
+        if (collections[slug]?.fetchSeq === mySeq) {
+          c.nfts = [...allNfts];
+          renderTags();
+          rebuildAndSortDebounced();
+        }
+      } while (cursor);
+
+      // Small delay between wallets
+      if (wi < activeWallets.length - 1) await sleep(150);
+    }
 
     if (collections[slug]?.fetchSeq !== mySeq) return;
     c.status = 'loaded';
-    c.nfts   = nfts;
+    c.nfts   = allNfts;
     renderTags();
     rebuildAndSort();
 
