@@ -247,6 +247,25 @@
     }
     .wallet-reset:hover { color: var(--gold); }
 
+    /* ── Wallet pills ── */
+    .wallet-pills {
+      padding: 8px 28px 0; max-width: 1800px; margin: 0 auto;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .wallet-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 4px 6px 4px 12px;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem;
+    }
+    .wallet-pill-x {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-dim); font-size: 1rem; line-height: 1; padding: 0 3px;
+    }
+    .wallet-pill-x:hover { color: var(--red); }
+
     /* ── Collection builder ── */
     .collection-builder {
       padding: 14px 28px 0; max-width: 1800px; margin: 0 auto;
@@ -362,7 +381,7 @@
     #export-canvas { display: none; position: absolute; pointer-events: none; }
 
     @media (max-width: 640px) {
-      .header, .wallet-search, .collection-builder, .toolbar, .status-bar, .grid-outer { padding-left: 16px; padding-right: 16px; }
+      .header, .wallet-search, .wallet-pills, .collection-builder, .toolbar, .status-bar, .grid-outer { padding-left: 16px; padding-right: 16px; }
       #nft-grid, .skeleton-grid { --cols: 4 !important; }
       .lb-panel { border-radius: 10px; }
       .traits-grid { grid-template-columns: repeat(2, 1fr); }
@@ -474,13 +493,14 @@
       <rect x="1" y="3" width="12" height="9" rx="2"/>
       <path d="M9 7h2M1 6h12"/>
     </svg>
-    <input id="wallet-input" type="text" placeholder="Enter any wallet address (0x…)"
+    <input id="wallet-input" type="text" placeholder="Enter wallet address (0x…) to add"
       autocomplete="off" spellcheck="false" maxlength="42"
-      oninput="onWalletInput()" onkeydown="if(event.key==='Enter')searchWallet()">
+      oninput="onWalletInput()" onkeydown="if(event.key==='Enter')addWallet()">
   </div>
-  <button class="btn btn-gold" onclick="searchWallet()">Search</button>
-  <button class="wallet-reset" id="reset-btn" onclick="clearWallet()" style="display:none">Clear</button>
+  <button type="button" class="btn btn-gold" onclick="addWallet()">Add</button>
+  <button type="button" class="wallet-reset" id="reset-btn" onclick="clearWallet()" style="display:none">Clear</button>
 </div>
+<div id="wallet-pills" class="wallet-pills"></div>
 
 <div class="collection-builder">
   <span class="picker-label">Collections</span>
