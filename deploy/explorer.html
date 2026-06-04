@@ -1301,7 +1301,7 @@ function updateStatus() {
 }
 
 function updatePageState() {
-  const hasWallet      = activeWallet !== '';
+  const hasWallet      = activeWallets.length > 0;
   const hasCollections = collectionOrder.length > 0;
   const anyLoaded      = collectionOrder.some(s => collections[s]?.status === 'loaded' || collections[s]?.status === 'loading');
   const anyLoading     = collectionOrder.some(s => collections[s]?.status === 'loading');
@@ -1317,9 +1317,13 @@ function updatePageState() {
   $('refresh-btn').disabled = !hasWallet || !hasCollections;
 
   if (noResults && hasWallet) {
-    const short = activeWallet.slice(0, 6) + '…' + activeWallet.slice(-5);
     $('empty-title').textContent = 'No NFTs found';
-    $('empty-msg').textContent = 'Wallet ' + short + ' doesn\'t hold any NFTs from the selected collection' + (collectionOrder.length > 1 ? 's' : '') + '.';
+    if (activeWallets.length === 1) {
+      const short = activeWallets[0].slice(0, 6) + '…' + activeWallets[0].slice(-5);
+      $('empty-msg').textContent = 'Wallet ' + short + ' doesn\'t hold any NFTs from the selected collection' + (collectionOrder.length > 1 ? 's' : '') + '.';
+    } else {
+      $('empty-msg').textContent = 'No NFTs found across ' + activeWallets.length + ' wallets in the selected collection' + (collectionOrder.length > 1 ? 's' : '') + '.';
+    }
   }
 }
 
@@ -1401,13 +1405,25 @@ function loadPrefs() {
 // ── URL params ────────────────────────────────────────────────────
 function applyUrlParams() {
   const params = new URLSearchParams(location.search);
-  const w = (params.get('wallet') || '').trim();
-  if (WALLET_RE.test(w)) {
-    $('wallet-input').value = w;
-    activeWallet = w.toLowerCase();
-    updateHeaderWallet(activeWallet);
-    $('reset-btn').style.display = 'inline';
+
+  // Support ?wallets=0x...,0x... (plural, new) and ?wallet=0x... (singular, backward compat)
+  const walletsParam = (params.get('wallets') || '').trim();
+  const walletParam  = (params.get('wallet')  || '').trim();
+  const rawWallets   = walletsParam
+    ? walletsParam.split(',').map(x => x.trim().toLowerCase()).filter(x => WALLET_RE.test(x))
+    : (WALLET_RE.test(walletParam) ? [walletParam.toLowerCase()] : []);
+
+  for (const w of rawWallets) {
+    if (!activeWallets.includes(w)) activeWallets.push(w);
   }
+
+  if (activeWallets.length > 0) {
+    renderWalletPills();
+    updateHeaderWallet();
+    $('reset-btn').style.display = 'inline';
+    $('browse-btn').disabled = false;
+  }
+
   const slugParam = params.get('collections') || '';
   for (const s of slugParam.split(',').map(x => x.trim().toLowerCase())) {
     if (s && SLUG_RE.test(s) && !collections[s]) {
@@ -1829,7 +1845,7 @@ async function downloadCircle() {
       if (!blob || blob.size < 512) {
         btn.innerHTML = '✕ Failed'; setTimeout(resetCircleDlBtn, 2500); return;
       }
-      const short = activeWallet ? activeWallet.slice(0, 8) : 'circle';
+      const short = activeWallets.length > 0 ? activeWallets[0].slice(0, 8) : 'circle';
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement('a'), { href: url, download: 'circle_' + short + '.png' });
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
@@ -1876,8 +1892,8 @@ function $(id) { return document.getElementById(id); }
     }
   });
 
-  // If URL params populated wallet + collections, start fetching
-  if (activeWallet && collectionOrder.length > 0) {
+  // If URL params populated wallets + collections, start fetching
+  if (activeWallets.length > 0 && collectionOrder.length > 0) {
     renderTags();
     refetchAll();
   } else if (collectionOrder.length > 0) {
