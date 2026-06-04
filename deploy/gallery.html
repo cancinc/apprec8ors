@@ -1121,12 +1121,12 @@ function updateHeaderWallet() {
 }
 
 // ── Core fetch: single collection page-loop ───────────────────────
-async function fetchCollectionNFTs(slug) {
+async function fetchCollectionNFTs(slug, wallet) {
   const nfts = [];
   let nextCursor = null;
 
   do {
-    let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallet)
+    let url = '/api/nfts?wallet=' + encodeURIComponent(wallet)
             + '&collection=' + encodeURIComponent(slug);
     if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
 
@@ -1155,6 +1155,16 @@ async function fetchAll() {
   $('nft-count').style.display = 'none';
   $('oo-badge').style.display = 'none';
 
+  if (activeWallets.length === 0) {
+    hideSkeleton();
+    hideProgress();
+    $('empty-title').textContent = 'No wallets';
+    $('empty-msg').textContent = 'Add a wallet above to see their NFTs.';
+    $('empty-state').style.display = 'block';
+    $('refresh-btn').disabled = false;
+    return;
+  }
+
   const isAll = activeCollection === 'all';
   status(isAll ? 'Loading all collections…' : 'Loading collection…', 'loading');
   progress(10);
@@ -1164,46 +1174,54 @@ async function fetchAll() {
   try {
     if (isAll) {
       const errors = [];
+      const totalSteps = COLLECTION_KEYS.length * activeWallets.length;
+      let step = 0;
       for (let i = 0; i < COLLECTION_KEYS.length; i++) {
         const slug = COLLECTION_KEYS[i];
         const conf = COLLECTIONS[slug];
-        status('Loading ' + conf.label + '…', 'loading');
-        progress(10 + (i / COLLECTION_KEYS.length) * 80);
-        try {
-          const batch = await fetchCollectionNFTs(slug);
-          allNfts.push(...batch);
-        } catch (err) {
-          errors.push(conf.label);
-          console.error('Failed to fetch', slug, err);
+        for (let j = 0; j < activeWallets.length; j++) {
+          status('Loading ' + conf.label + '…', 'loading');
+          progress(10 + (step / totalSteps) * 80);
+          try {
+            const batch = await fetchCollectionNFTs(slug, activeWallets[j]);
+            allNfts.push(...batch);
+          } catch (err) {
+            if (!errors.includes(conf.label)) errors.push(conf.label);
+            console.error('Failed to fetch', slug, activeWallets[j], err);
+          }
+          step++;
+          if (step < totalSteps) await sleep(150);
         }
-        if (i < COLLECTION_KEYS.length - 1) await sleep(150);
       }
       if (errors.length > 0 && allNfts.length === 0) {
         throw new Error('All collections failed to load: ' + errors.join(', '));
       }
 
     } else {
-      let nextCursor = null;
-      let page = 0;
-      do {
-        let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallet)
-                + '&collection=' + encodeURIComponent(activeCollection);
-        if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
+      for (let j = 0; j < activeWallets.length; j++) {
+        let nextCursor = null;
+        let page = 0;
+        do {
+          let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallets[j])
+                  + '&collection=' + encodeURIComponent(activeCollection);
+          if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
 
-        const resp = await fetch(url);
-        if (resp.status === 429) throw new Error('Rate limit hit — please wait a moment and refresh.');
-        if (!resp.ok)            throw new Error('Failed to load collection (' + resp.status + ').');
+          const resp = await fetch(url);
+          if (resp.status === 429) throw new Error('Rate limit hit — please wait a moment and refresh.');
+          if (!resp.ok)            throw new Error('Failed to load collection (' + resp.status + ').');
 
-        const data  = await resp.json();
-        if (data.error) throw new Error(data.error);
+          const data  = await resp.json();
+          if (data.error) throw new Error(data.error);
 
-        const batch = (data.nfts || []).map(n => ({ ...n, _collection: activeCollection }));
-        allNfts.push(...batch);
-        nextCursor = (batch.length > 0 && data.next) ? data.next : null;
-        page++;
-        progress(Math.min(85, 10 + page * 25));
-        if (nextCursor) await sleep(100);
-      } while (nextCursor);
+          const batch = (data.nfts || []).map(n => ({ ...n, _collection: activeCollection }));
+          allNfts.push(...batch);
+          nextCursor = (batch.length > 0 && data.next) ? data.next : null;
+          page++;
+          progress(Math.min(85, 10 + (j * 30) + page * 10));
+          if (nextCursor) await sleep(100);
+        } while (nextCursor);
+        if (j < activeWallets.length - 1) await sleep(150);
+      }
     }
 
     progress(100);
@@ -1223,10 +1241,15 @@ async function fetchAll() {
       $('oo-badge').style.display = 'inline';
     }
     if (allNfts.length === 0) {
-      const short = activeWallet.slice(0,6) + '…' + activeWallet.slice(-5);
       $('empty-title').textContent = 'No NFTs found';
-      $('empty-msg').textContent = 'Wallet ' + short + ' doesn\'t hold any NFTs from '
-        + (isAll ? 'these collections' : 'this collection') + '.';
+      if (activeWallets.length === 1) {
+        const short = activeWallets[0].slice(0, 6) + '…' + activeWallets[0].slice(-5);
+        $('empty-msg').textContent = 'Wallet ' + short + ' doesn\'t hold any NFTs from '
+          + (isAll ? 'these collections' : 'this collection') + '.';
+      } else {
+        $('empty-msg').textContent = 'No NFTs found across ' + activeWallets.length + ' wallets in '
+          + (isAll ? 'these collections' : 'this collection') + '.';
+      }
       $('empty-state').style.display = 'block';
     }
     status('', '');
