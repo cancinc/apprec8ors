@@ -371,6 +371,90 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── View mode toggle ── */
+    .view-toggle { display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+    .view-btn {
+      background:var(--surface2); color:var(--text-dim); border:none;
+      padding:5px 9px; cursor:pointer; transition:all 0.15s;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .view-btn:first-child { border-right:1px solid var(--border); }
+    .view-btn.active { background:var(--gold); color:#000; }
+    .view-btn:not(.active):hover { color:var(--gold); }
+
+    /* ── Circle config panel ── */
+    .circle-config {
+      display:none; flex-wrap:wrap; gap:14px; align-items:center;
+      padding:12px 28px 0; max-width:1800px; margin:0 auto;
+    }
+    .circle-config.active { display:flex; }
+    .circle-center-preview { display:inline-flex; align-items:center; gap:8px; }
+    .circle-center-thumb {
+      width:30px; height:30px; border-radius:50%;
+      object-fit:cover; border:2px solid var(--gold); flex-shrink:0;
+    }
+    .circle-center-name {
+      font-size:0.78rem; color:var(--text); max-width:100px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .ring-row { display:flex; align-items:center; gap:6px; }
+    .ring-label { font-size:0.75rem; color:var(--text-dim); white-space:nowrap; }
+    input[type="number"].ring-count {
+      width:50px; padding:5px 6px;
+      background:var(--surface2); border:1px solid var(--border);
+      border-radius:6px; color:var(--text); font-size:0.82rem;
+      outline:none; text-align:center; -moz-appearance:textfield;
+    }
+    input[type="number"].ring-count::-webkit-inner-spin-button,
+    input[type="number"].ring-count::-webkit-outer-spin-button { -webkit-appearance:none; }
+    input[type="number"].ring-count:focus { border-color:var(--gold); }
+
+    /* ── Center NFT picker modal ── */
+    .picker-backdrop {
+      position:fixed; inset:0; background:rgba(0,0,0,0.88);
+      z-index:950; display:none; align-items:center; justify-content:center;
+      padding:20px; backdrop-filter:blur(6px);
+    }
+    .picker-backdrop.open { display:flex; animation:fadein 0.18s ease; }
+    .picker-panel {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:14px; width:min(780px,100%); max-height:85vh;
+      display:flex; flex-direction:column; overflow:hidden;
+      animation:popIn 0.18s cubic-bezier(.34,1.56,.64,1);
+    }
+    .picker-panel-header {
+      padding:16px 20px 14px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    }
+    .picker-panel-title { font-size:1rem; font-weight:700; }
+    .picker-panel-close {
+      background:none; border:1px solid var(--border); color:var(--text-dim);
+      width:28px; height:28px; border-radius:50%; cursor:pointer;
+      font-size:0.85rem; display:flex; align-items:center; justify-content:center; transition:all 0.15s;
+    }
+    .picker-panel-close:hover { border-color:var(--gold); color:var(--gold); }
+    .picker-grid-inner {
+      overflow-y:auto; padding:14px; flex:1;
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:10px;
+    }
+    .picker-nft {
+      aspect-ratio:1; border-radius:50%; overflow:hidden; cursor:pointer;
+      border:3px solid transparent; transition:border-color 0.15s, transform 0.15s; position:relative;
+    }
+    .picker-nft img { width:100%; height:100%; object-fit:cover; display:block; }
+    .picker-nft:hover { border-color:rgba(255,215,0,0.6); transform:scale(1.06); }
+    .picker-nft.selected { border-color:var(--gold); }
+    .picker-panel-footer {
+      padding:12px 20px; border-top:1px solid var(--border); flex-shrink:0;
+      display:flex; align-items:center; justify-content:space-between;
+      font-size:0.8rem; color:var(--text-dim);
+    }
+
+    /* ── Circle canvas ── */
+    #circle-canvas-wrap { display:none; justify-content:center; }
+    #circle-canvas-wrap.active { display:flex; }
+    #circle-canvas { max-width:100%; height:auto; border-radius:8px; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -469,6 +553,37 @@
     <label>Gap</label>
     <input type="color" id="gap-color-input" value="#080808" oninput="setGapColor(this.value)">
   </div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group">
+    <label>View</label>
+    <div class="view-toggle">
+      <button class="view-btn active" id="view-grid-btn" onclick="setViewMode('grid')" title="Grid">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="5" height="5" rx="0.5"/><rect x="8" y="1" width="5" height="5" rx="0.5"/><rect x="1" y="8" width="5" height="5" rx="0.5"/><rect x="8" y="8" width="5" height="5" rx="0.5"/></svg>
+      </button>
+      <button class="view-btn" id="view-circle-btn" onclick="setViewMode('circle')" title="Circle">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="6"/><circle cx="7" cy="7" r="2.5"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="circle-config" id="circle-config">
+  <span class="picker-label">Center</span>
+  <div id="circle-center-display">
+    <button class="btn btn-ghost" onclick="openCenterPicker()">Pick center…</button>
+  </div>
+  <div class="toolbar-sep"></div>
+  <div id="circle-rings" style="display:contents"></div>
+  <div class="toolbar-sep"></div>
+  <div class="toolbar-group">
+    <label>Background</label>
+    <input type="color" id="circle-bg-color" value="#080808" oninput="renderCircleView()">
+  </div>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-ghost" id="dl-circle-btn" onclick="downloadCircle()">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg>
+    Download Circle
+  </button>
 </div>
 
 <div class="status-bar">
@@ -501,6 +616,9 @@
     <h2 id="empty-title">Nothing here</h2>
     <p id="empty-msg">This wallet doesn't hold any NFTs from the selected collections.</p>
   </div>
+  <div id="circle-canvas-wrap">
+    <canvas id="circle-canvas" onclick="onCircleCanvasClick(event)"></canvas>
+  </div>
 </div>
 
 <div class="lb-backdrop" id="lb-backdrop">
@@ -524,6 +642,20 @@
 </div>
 
 <canvas id="export-canvas"></canvas>
+
+<div class="picker-backdrop" id="center-picker-backdrop">
+  <div class="picker-panel">
+    <div class="picker-panel-header">
+      <span class="picker-panel-title">Choose center NFT</span>
+      <button class="picker-panel-close" onclick="closeCenterPicker()">✕</button>
+    </div>
+    <div class="picker-grid-inner" id="picker-grid"></div>
+    <div class="picker-panel-footer">
+      <span id="picker-count"></span>
+      <span style="color:var(--text-muted)">Click any NFT to select</span>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── Constants ─────────────────────────────────────────────────────
@@ -553,6 +685,31 @@ let collectionOrder = [];  // insertion order
 let view            = [];  // current sorted array for grid + lightbox index
 let currentLbNft    = null;
 let rebuildTimer    = null;
+
+// ── Circle view state ─────────────────────────────────────────────
+let viewMode        = 'grid';
+let circleRenderSeq = 0;
+const circleConfig  = {
+  centerNft: null,
+  rings: [
+    { slug: null, count: 8  },
+    { slug: null, count: 16 },
+    { slug: null, count: 24 },
+  ],
+};
+let circleHitTargets = [];
+let _pickerNfts      = [];
+
+const CIRCLE_SIZE = 1400;
+const CIRCLE_CX   = 700;
+const CIRCLE_CY   = 700;
+const CENTER_R    = 120;
+const RING_PARAMS = [
+  { orbitR: 280, pfpR: 80 },
+  { orbitR: 460, pfpR: 66 },
+  { orbitR: 638, pfpR: 58 },
+];
+const _imgCache = new Map();
 
 // Browse wallet state
 const browse = {
@@ -974,6 +1131,7 @@ function applySort(items) {
   }
 
   renderGrid(view);
+  if (viewMode === 'circle') renderCircleView();
   savePrefs();
 }
 
@@ -1361,6 +1519,257 @@ function resetDlBtn() {
   $('dl-btn').innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg> Download Grid';
 }
 
+// ── Circle view ───────────────────────────────────────────────────
+function setViewMode(mode) {
+  viewMode = mode;
+  $('view-grid-btn').classList.toggle('active',      mode === 'grid');
+  $('view-circle-btn').classList.toggle('active',    mode === 'circle');
+  $('circle-config').classList.toggle('active',      mode === 'circle');
+  $('circle-canvas-wrap').classList.toggle('active', mode === 'circle');
+  $('nft-grid').style.display = mode === 'circle' ? 'none' : '';
+  if (mode === 'circle') {
+    $('skeleton').style.display = 'none';
+    renderCircleConfig();
+    renderCircleView();
+  }
+}
+
+function renderCircleConfig() {
+  const centerEl = $('circle-center-display');
+  if (circleConfig.centerNft) {
+    const n   = circleConfig.centerNft;
+    const nm  = n.name || '#' + n.identifier;
+    const src = n.display_image_url || n.image_url || '';
+    centerEl.innerHTML =
+      '<div class="circle-center-preview">' +
+        '<img class="circle-center-thumb" src="' + esc(src) + '" alt="">' +
+        '<span class="circle-center-name" title="' + esc(nm) + '">' + esc(nm) + '</span>' +
+      '</div>' +
+      '<button class="btn btn-ghost" style="padding:5px 10px;font-size:0.78rem" onclick="openCenterPicker()">Change</button>';
+  } else {
+    centerEl.innerHTML = '<button class="btn btn-ghost" onclick="openCenterPicker()">Pick center…</button>';
+  }
+
+  $('circle-rings').innerHTML = circleConfig.rings.map((ring, i) => {
+    const opts =
+      '<option value=""' + (!ring.slug ? ' selected' : '') + '>All collections</option>' +
+      collectionOrder.map(slug => {
+        const c = collections[slug];
+        return '<option value="' + esc(slug) + '"' + (ring.slug === slug ? ' selected' : '') + '>' +
+          esc(c?.label || slug) + '</option>';
+      }).join('');
+    return '<div class="ring-row">' +
+      '<span class="ring-label">Ring ' + (i + 1) + '</span>' +
+      '<select style="font-size:0.78rem;padding:5px 8px" onchange="setRingSlug(' + i + ',this.value)">' + opts + '</select>' +
+      '<input type="number" class="ring-count" value="' + ring.count + '" min="1" max="80" ' +
+        'onchange="setRingCount(' + i + ',this.value)">' +
+    '</div>';
+  }).join('');
+}
+
+function setRingSlug(i, slug) {
+  circleConfig.rings[i].slug = slug || null;
+  renderCircleView();
+}
+
+function setRingCount(i, val) {
+  circleConfig.rings[i].count = Math.max(1, Math.min(80, parseInt(val) || 1));
+  renderCircleView();
+}
+
+// ── Center picker ─────────────────────────────────────────────────
+function openCenterPicker() {
+  _pickerNfts = [];
+  for (const slug of collectionOrder) {
+    const c = collections[slug];
+    if (c && c.visible && (c.status === 'loading' || c.status === 'loaded')) {
+      _pickerNfts.push(...c.nfts);
+    }
+  }
+  const grid = $('picker-grid');
+  if (_pickerNfts.length === 0) {
+    grid.innerHTML = '<p style="grid-column:1/-1;color:var(--text-dim);font-size:0.85rem;padding:12px 0">No NFTs loaded yet.</p>';
+    $('picker-count').textContent = '';
+  } else {
+    grid.innerHTML = _pickerNfts.map((n, i) => {
+      const nm  = n.name || '#' + n.identifier;
+      const src = n.display_image_url || n.image_url || '';
+      const sel = circleConfig.centerNft &&
+        circleConfig.centerNft.identifier === n.identifier &&
+        circleConfig.centerNft._collection === n._collection;
+      return '<div class="picker-nft' + (sel ? ' selected' : '') + '" onclick="selectCenterNft(' + i + ')" title="' + esc(nm) + '">' +
+        '<img src="' + esc(src) + '" alt="' + esc(nm) + '" loading="lazy">' +
+      '</div>';
+    }).join('');
+    $('picker-count').textContent = _pickerNfts.length + ' NFTs';
+  }
+  $('center-picker-backdrop').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCenterPicker() {
+  $('center-picker-backdrop').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function selectCenterNft(i) {
+  if (!_pickerNfts[i]) return;
+  circleConfig.centerNft = _pickerNfts[i];
+  closeCenterPicker();
+  renderCircleConfig();
+  renderCircleView();
+}
+
+// ── Circle canvas rendering ────────────────────────────────────────
+function loadImgCached(src) {
+  if (!src) return Promise.resolve(null);
+  if (!_imgCache.has(src)) _imgCache.set(src, loadImg(src));
+  return _imgCache.get(src);
+}
+
+async function renderCircleView() {
+  if (viewMode !== 'circle') return;
+  const mySeq = ++circleRenderSeq;
+
+  const canvas  = $('circle-canvas');
+  const ctx     = canvas.getContext('2d');
+  canvas.width  = CIRCLE_SIZE;
+  canvas.height = CIRCLE_SIZE;
+
+  const bgColor = $('circle-bg-color').value || '#080808';
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, CIRCLE_SIZE, CIRCLE_SIZE);
+
+  const usedKey = n => n._collection + ':' + n.identifier;
+  const usedSet = new Set();
+  if (circleConfig.centerNft) usedSet.add(usedKey(circleConfig.centerNft));
+
+  const ringNfts = circleConfig.rings.map(ring => {
+    let pool = [];
+    if (!ring.slug) {
+      for (const s of collectionOrder) {
+        const c = collections[s];
+        if (c && c.visible) pool.push(...c.nfts);
+      }
+    } else {
+      const c = collections[ring.slug];
+      if (c && c.visible) pool = [...c.nfts];
+    }
+    const taken = pool.filter(n => !usedSet.has(usedKey(n))).slice(0, ring.count);
+    taken.forEach(n => usedSet.add(usedKey(n)));
+    return taken;
+  });
+
+  const items = [];
+  if (circleConfig.centerNft) {
+    items.push({ nft: circleConfig.centerNft, x: CIRCLE_CX, y: CIRCLE_CY, r: CENTER_R, zOrder: 999 });
+  }
+  ringNfts.forEach((nfts, ri) => {
+    const { orbitR, pfpR } = RING_PARAMS[ri];
+    nfts.forEach((nft, i) => {
+      const angle = (2 * Math.PI * i / nfts.length) - Math.PI / 2;
+      items.push({ nft, x: CIRCLE_CX + orbitR * Math.cos(angle), y: CIRCLE_CY + orbitR * Math.sin(angle), r: pfpR, zOrder: ri });
+    });
+  });
+
+  if (items.length === 0) { setStatus('', ''); return; }
+
+  setStatus('Building circle… 0/' + items.length, 'loading');
+  let done = 0;
+  const rendered = await Promise.all(items.map(async item => {
+    const src = item.nft.display_image_url || item.nft.image_url || '';
+    const img = await loadImgCached(src);
+    done++;
+    if (viewMode === 'circle' && circleRenderSeq === mySeq) {
+      setStatus('Building circle… ' + done + '/' + items.length, 'loading');
+    }
+    return { ...item, img };
+  }));
+
+  if (viewMode !== 'circle' || circleRenderSeq !== mySeq) return;
+
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, CIRCLE_SIZE, CIRCLE_SIZE);
+
+  const drawOrder = rendered.sort((a, b) => a.zOrder - b.zOrder);
+  circleHitTargets = [...drawOrder].reverse().map(({ x, y, r, nft }) => ({ x, y, r, nft }));
+
+  for (const item of drawOrder) {
+    _drawCircleNft(ctx, item.img, item.x, item.y, item.r);
+  }
+
+  setStatus('', '');
+}
+
+function _drawCircleNft(ctx, img, cx, cy, r) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.clip();
+  if (img) {
+    ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+  } else {
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function onCircleCanvasClick(e) {
+  const canvas = $('circle-canvas');
+  const rect   = canvas.getBoundingClientRect();
+  const sx = canvas.width  / rect.width;
+  const sy = canvas.height / rect.height;
+  const cx = (e.clientX - rect.left) * sx;
+  const cy = (e.clientY - rect.top)  * sy;
+  for (const t of circleHitTargets) {
+    const dx = cx - t.x, dy = cy - t.y;
+    if (dx * dx + dy * dy <= t.r * t.r) {
+      const idx = view.findIndex(n =>
+        n.identifier === t.nft.identifier && n._collection === t.nft._collection
+      );
+      if (idx >= 0) openLightbox(idx);
+      return;
+    }
+  }
+}
+
+async function downloadCircle() {
+  const btn = $('dl-circle-btn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Saving…';
+  const canvas = $('circle-canvas');
+  try {
+    canvas.toBlob(blob => {
+      if (!blob || blob.size < 512) {
+        btn.innerHTML = '✕ Failed'; setTimeout(resetCircleDlBtn, 2500); return;
+      }
+      const short = activeWallet ? activeWallet.slice(0, 8) : 'circle';
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), { href: url, download: 'circle_' + short + '.png' });
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      btn.innerHTML = '✓ Saved!';
+      setTimeout(resetCircleDlBtn, 2000);
+    }, 'image/png');
+  } catch {
+    btn.innerHTML = '✕ Failed'; setTimeout(resetCircleDlBtn, 2500);
+  }
+}
+
+function resetCircleDlBtn() {
+  const btn = $('dl-circle-btn');
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 1v7M3 6l3 3 3-3"/><path d="M1 10h10"/></svg> Download Circle';
+}
+
 // ── Helpers ───────────────────────────────────────────────────────
 function isVideoUrl(url) { return url && /\.(mp4|webm|mov|ogv|ogg)(\?|$)/i.test(url); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -1375,10 +1784,12 @@ function $(id) { return document.getElementById(id); }
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeLightbox();
+      closeCenterPicker();
       $('browse-panel').style.display = 'none';
     }
   });
   $('lb-backdrop').addEventListener('click', e => { if (e.target === $('lb-backdrop')) closeLightbox(); });
+  $('center-picker-backdrop').addEventListener('click', e => { if (e.target === $('center-picker-backdrop')) closeCenterPicker(); });
   document.addEventListener('click', e => {
     const panel = $('browse-panel');
     if (panel.style.display === 'none') return;
