@@ -44,10 +44,10 @@ Navy/yellow brand design (separate from the dark gallery theme). Sections:
 - **Footer** — Explorer link + external links (Appreciators.io, Twitter handles)
 
 ## How it works — gallery.html
-- `gallery.html` calls `/api/nfts?wallet=0x...&collection=<slug>` — no API key in the browser
+- `gallery.html` calls `/api/nfts?wallet=0x...&collection=<slug>` once per active wallet per collection — no API key in the browser
 - `nfts.js` proxies to OpenSea API v2, reads `OPENSEA_API_KEY` from Cloudflare env secret
 - Default wallet: `0x50fc8d1d8dca2605c26a3a8274a5430132e2af13`
-- Visitors can search any wallet address to see their holdings from any Appreciators collection
+- Visitors can add multiple wallet addresses; NFTs from all wallets are merged into one flat grid
 - Note: root-level `index.html` in the repo is an older dev version of the gallery; the production gallery is `deploy/gallery.html`
 
 ## Open NFT Explorer — `explorer.html`
@@ -59,15 +59,16 @@ Navy/yellow brand design (separate from the dark gallery theme). Sections:
 - `collection_meta` (`{ name, chain, address }`) is injected into the first-page response so the frontend gets the display name and contract without a separate API call
 
 ### UI features
-- Enter any wallet → add collection slugs manually via text input or via **Browse wallet ▾** dropdown
-- **Browse wallet dropdown** — on click, calls `/api/wallet-collections` to scan ETH/APE/BASE chains; shows a multi-select list with real collection name (from batch API), raw slug, and chain badge; "Add selected" adds all checked collections at once; already-added collections are dimmed
+- **Multi-wallet support** — type a wallet, press Enter or click Add; wallet appears as a removable pill; add more wallets to merge their holdings; "Clear" button appears when any wallet is active, clears all; page starts with no wallet loaded
+- Add collection slugs manually via text input or via **Browse wallet ▾** dropdown
+- **Browse wallet dropdown** — on click, calls `/api/wallet-collections` for each active wallet and merges results; shows a combined multi-select list with real collection name, raw slug, and chain badge; "Add selected" adds all checked collections at once; already-added collections are dimmed
 - Each collection is a removable pill: **loading** (pulse) → **loaded** (gold, count badge) → **error** (red, hover for message)
 - Click a pill name to **toggle visibility** (hide/show that collection's NFTs without re-fetching)
 - **Trait sort** — after collections load, a "By trait" optgroup appears in the sort dropdown with one entry per unique trait type found across all loaded NFTs; sorts alphabetically by value, NFTs missing the trait go to the end
 - Grid, lightbox, sort, columns/gap sliders, bg/gap color pickers, Download Grid, Save Image
 - Collection badge shown on cards when multiple collections are active
 - Lightbox builds correct OpenSea item URL from `chain + contract + tokenId`
-- URL params: `?wallet=0x...&collections=slug1,slug2` — shareable links
+- URL params: `?wallet=0x...&collections=slug1,slug2` (single wallet, backward compat) or `?wallets=0x...,0x...&collections=slug1,slug2` (multi-wallet) — shareable links
 - Slugs persist to localStorage and restore as pending pills on next visit
 
 ### wallet-collections.js — `/api/wallet-collections`
@@ -98,7 +99,7 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 ## Features (current) — gallery.html
 - **Collection picker** — pill buttons: All ✦ / Originals / The Appreciators / Potions / Companions
 - **All Collections mode** — fetches all 4 collections sequentially (rate-limit safe), tags each NFT with `_collection`, shows collection badge on cards and in lightbox
-- **Wallet search** — any 0x address; resets to default owner
+- **Multi-wallet support** — type a wallet address and press Enter or click Add; appears as a removable pill; multiple wallets' NFTs merged into one flat grid (no per-wallet color coding); "← Reset" always visible, restores the owner wallet; page starts empty on load; no wallet persistence to localStorage
 - **Sort** — ID asc/desc, 1/1 first, Random shuffle
 - **Column + gap sliders** — 2–20 columns
 - **Gold border treatment** — Originals 1/1 tokens (trait `"1-1": "True"`)
@@ -126,7 +127,8 @@ OpenSea collection URLs: `https://opensea.io/collection/<slug>`
 
 ### Rate limiting
 - `nfts.js` in-memory rate limiter: 40 requests/IP/minute (raised from 20 to accommodate All Collections mode firing 4 requests per page load)
-- All Collections fetch is sequential (not parallel) with 150ms delay between collections
+- All Collections fetch is sequential (not parallel) with 150ms delay between each (collection × wallet) pair
+- With N wallets in All Collections mode: N × 4 sequential requests (e.g. 2 wallets = 8 requests — comfortably within limit)
 
 ### Potions video
 - `isVideoUrl(url)` checks for `.mp4|webm|mov|ogv|ogg` extension in URL
