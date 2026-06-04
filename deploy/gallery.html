@@ -1198,28 +1198,33 @@ async function fetchAll() {
       }
 
     } else {
+      const perWallet = 75 / activeWallets.length;
       for (let j = 0; j < activeWallets.length; j++) {
         let nextCursor = null;
         let page = 0;
-        do {
-          let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallets[j])
-                  + '&collection=' + encodeURIComponent(activeCollection);
-          if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
+        try {
+          do {
+            let url = '/api/nfts?wallet=' + encodeURIComponent(activeWallets[j])
+                    + '&collection=' + encodeURIComponent(activeCollection);
+            if (nextCursor) url += '&next=' + encodeURIComponent(nextCursor);
 
-          const resp = await fetch(url);
-          if (resp.status === 429) throw new Error('Rate limit hit — please wait a moment and refresh.');
-          if (!resp.ok)            throw new Error('Failed to load collection (' + resp.status + ').');
+            const resp = await fetch(url);
+            if (resp.status === 429) throw new Error('Rate limit hit — please wait a moment and refresh.');
+            if (!resp.ok)            throw new Error('Failed to load collection (' + resp.status + ').');
 
-          const data  = await resp.json();
-          if (data.error) throw new Error(data.error);
+            const data  = await resp.json();
+            if (data.error) throw new Error(data.error);
 
-          const batch = (data.nfts || []).map(n => ({ ...n, _collection: activeCollection }));
-          allNfts.push(...batch);
-          nextCursor = (batch.length > 0 && data.next) ? data.next : null;
-          page++;
-          progress(Math.min(85, 10 + (j * 30) + page * 10));
-          if (nextCursor) await sleep(100);
-        } while (nextCursor);
+            const batch = (data.nfts || []).map(n => ({ ...n, _collection: activeCollection }));
+            allNfts.push(...batch);
+            nextCursor = (batch.length > 0 && data.next) ? data.next : null;
+            page++;
+            progress(Math.min(85, 10 + j * perWallet + page * (perWallet / 5)));
+            if (nextCursor) await sleep(100);
+          } while (nextCursor);
+        } catch (err) {
+          console.error('Failed to fetch', activeCollection, activeWallets[j], err);
+        }
         if (j < activeWallets.length - 1) await sleep(150);
       }
     }
