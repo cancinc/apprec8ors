@@ -699,7 +699,7 @@ const CHAIN_LABELS = {
 };
 
 // ── State ─────────────────────────────────────────────────────────
-let activeWallet    = '';
+let activeWallets   = [];
 let collections     = {};  // slug → CollState
 let collectionOrder = [];  // insertion order
 let view            = [];  // current sorted array for grid + lightbox index
@@ -759,38 +759,63 @@ function onWalletInput() {
   $('wallet-input').classList.toggle('invalid', val.length === 42 && !WALLET_RE.test(val));
 }
 
-function searchWallet() {
-  const val = $('wallet-input').value.trim();
-  if (!val) { clearWallet(); return; }
-  if (!WALLET_RE.test(val)) {
+function addWallet() {
+  const addr = $('wallet-input').value.trim().toLowerCase();
+  if (!addr) return;
+  if (!WALLET_RE.test(addr)) {
     $('wallet-input').classList.add('invalid');
     setStatus('Enter a valid Ethereum wallet address (0x… 42 hex chars).', 'error');
     return;
   }
-  const newWallet = val.toLowerCase();
-  const changed   = newWallet !== activeWallet;
-  activeWallet    = newWallet;
-  updateHeaderWallet(activeWallet);
-  $('reset-btn').style.display = 'inline';
-  $('wallet-input').classList.remove('invalid');
-  $('browse-btn').disabled = false;
-
-  if (changed) {
-    resetBrowse();
-    if (collectionOrder.length > 0) refetchAll();
+  if (activeWallets.includes(addr)) {
+    $('wallet-input').value = '';
+    $('wallet-input').classList.remove('invalid');
+    return;
   }
-  if (collectionOrder.length === 0) updatePageState();
+  activeWallets.push(addr);
+  $('wallet-input').value = '';
+  $('wallet-input').classList.remove('invalid');
+  setStatus('', '');
+  renderWalletPills();
+  updateHeaderWallet();
+  $('reset-btn').style.display = 'inline';
+  $('browse-btn').disabled = false;
+  resetBrowse();
+  if (collectionOrder.length > 0) refetchAll();
+  updatePageState();
+}
+
+function removeWallet(addr) {
+  activeWallets = activeWallets.filter(w => w !== addr);
+  renderWalletPills();
+  updateHeaderWallet();
+  if (activeWallets.length === 0) {
+    $('reset-btn').style.display = 'none';
+    $('browse-btn').disabled = true;
+  }
+  resetBrowse();
+  for (const slug of collectionOrder) {
+    const c = collections[slug];
+    c.status = 'pending';
+    c.nfts   = [];
+    c.error  = '';
+    c.fetchSeq++;
+  }
+  renderTags();
+  view = [];
+  renderGrid([]);
+  if (activeWallets.length > 0 && collectionOrder.length > 0) refetchAll();
+  updatePageState();
+  setStatus('', '');
 }
 
 function clearWallet() {
-  activeWallet = '';
+  activeWallets = [];
   $('wallet-input').value = '';
   $('wallet-input').classList.remove('invalid');
   $('reset-btn').style.display = 'none';
   $('browse-btn').disabled = true;
-  $('header-wallet').textContent = 'Enter a wallet to get started';
   resetBrowse();
-  // Reset all loaded collections back to pending
   for (const slug of collectionOrder) {
     const c = collections[slug];
     c.status = 'pending';
@@ -805,11 +830,28 @@ function clearWallet() {
   setStatus('', '');
 }
 
-function updateHeaderWallet(addr) {
-  const short = addr.slice(0, 6) + '…' + addr.slice(-5);
+function renderWalletPills() {
+  $('wallet-pills').innerHTML = activeWallets.map(addr => {
+    const short = addr.slice(0, 6) + '…' + addr.slice(-5);
+    return '<span class="wallet-pill">' + short
+      + '<button type="button" class="wallet-pill-x" onclick="removeWallet(\'' + addr + '\')" title="Remove">×</button>'
+      + '</span>';
+  }).join('');
+}
+
+function updateHeaderWallet() {
   const el = $('header-wallet');
-  el.textContent = short;
-  el.title = addr;
+  if (activeWallets.length === 0) {
+    el.textContent = 'Enter a wallet to get started';
+    el.title = '';
+  } else if (activeWallets.length === 1) {
+    const addr = activeWallets[0];
+    el.textContent = addr.slice(0, 6) + '…' + addr.slice(-5);
+    el.title = addr;
+  } else {
+    el.textContent = activeWallets.length + ' wallets';
+    el.title = activeWallets.join(', ');
+  }
 }
 
 // ── Collection builder ────────────────────────────────────────────
