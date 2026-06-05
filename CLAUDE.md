@@ -217,3 +217,19 @@ The Appreciators NFT (6,666 tokens, Ethereum) shipped with both a static PNG and
 
 ## Environment / secrets
 - `OPENSEA_API_KEY` — set in Cloudflare Pages → Settings → Environment variables (production + preview)
+
+## Favicons / head icons
+- `deploy/assets/a-logo-head.png` — 180×180 transparent-padded square version of `a-logo.png`; used for `rel="icon"` and `rel="apple-touch-icon"` in all 4 HTML files
+- `deploy/favicon.ico` — multi-size (16/32/48px) auto-discovered by browsers at `/favicon.ico`; generated from `a-logo-head.png`
+- All 4 HTML files (`index.html`, `gallery.html`, `explorer.html`, `animated.html`) have both `<link rel="icon">` and `<link rel="apple-touch-icon">` tags at lines 5–6
+
+## Analytics — Cloudflare RUM (Browser Insights)
+- **Status:** enabled via Cloudflare dashboard auto-injection, **EU visitors excluded**
+- **Setting:** "Enable, excluding visitor data in the EU" (Analytics & Logs → Web Analytics in the Cloudflare dashboard)
+- **Beacon:** `static.cloudflareinsights.com/beacon.min.js` — injected by the edge, cookieless, no fingerprinting
+- **No manual `<script>` in the HTML** — do not add one; double-loading the beacon will skew data
+- **Undercounting:** many ad/privacy blockers block `cloudflareinsights.com`; treat RUM as a trend, not a precise census
+- **Future CSP note:** if a Content-Security-Policy header is ever added, it must allowlist:
+  - `script-src`: `static.cloudflareinsights.com`
+  - `connect-src`: `cloudflareinsights.com`
+  Otherwise the beacon silently stops reporting with no visible error
